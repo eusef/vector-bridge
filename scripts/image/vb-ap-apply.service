@@ -1,0 +1,10 @@
+[Unit]
+Description=VectorBridge: apply the owner's Wi-Fi name and passphrase, then lock the card down
+After=NetworkManager.service persist.mount vb-firstboot.service
+
+[Service]
+Type=oneshot
+# Let the web UI's "saved" reply reach the phone before the reboot.
+ExecStartPre=/bin/sleep 3
+ExecStart=/opt/vector-bridge/venv/bin/python -m vector_bridge.apsetup apply
+StandardOutput=journal+console

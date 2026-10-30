@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>First Boot, Open Wi-Fi · VectorBridge</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;background:#0e1210}
+.r{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,"Segoe UI","Helvetica Neue",Arial,sans-serif;color:#ffffff;background:#0e1210}
+.r *{box-sizing:border-box}
+:root{color-scheme:dark}
+.r{overflow-wrap:anywhere}
+.sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.ic{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.mono{font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;font-variant-numeric:tabular-nums}
+button{font-family:inherit;color:inherit;cursor:pointer}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid #3fbf4f;outline-offset:2px}
+a{color:#3fbf4f}a:hover{color:#6fd57b}
+dl{margin:0}dd{margin:0}
+input[type=range]{width:100%;height:44px;margin:0;accent-color:#3fbf4f}
+input[type=checkbox],input[type=radio]{width:22px;height:22px;margin:0;accent-color:#3fbf4f;flex:none}
+input[type=text],input[type=password],select{font-family:inherit;font-size:17px;line-height:22px;color:#ffffff;background:rgba(14,18,16,0.6);border:1px solid #2a312c;border-radius:8px;min-height:44px;padding:0 12px;width:100%}
+ol,ul{margin:0}
+</style>
+</helmet>
+<div class="r" style="width: 390px; height: 1180px; display: flex; flex-direction: column; overflow: hidden">
+<header style="height: 64px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; background: #1a1f1c; border-bottom: 1px solid #2a312c">
+<div style="display: flex; align-items: center; gap: 8px"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="width: 22px; height: 22px; color: #3fbf4f"><path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9"></path><path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5"></path><circle cx="12" cy="12" r="2"></circle><path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5"></path><path d="M19.1 4.9C23 8.8 23 15.1 19.1 19"></path></svg><span style="font-size: 20px; line-height: 25px; font-weight: 700">VectorBridge</span></div>
+<div style="display: flex; align-items: center; gap: 8px"><a href="Display-Sheet.dc.html" aria-label="Appearance: dark. Tap to switch. Open display settings" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; background: rgba(14,18,16,0.6); border: 1px solid #2a312c; border-radius: 8px; color: #ffffff"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="width: 20px; height: 20px"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2"></path><path d="M12 20v2"></path><path d="m4.9 4.9 1.4 1.4"></path><path d="m17.7 17.7 1.4 1.4"></path><path d="M2 12h2"></path><path d="M20 12h2"></path><path d="m6.3 17.7-1.4 1.4"></path><path d="m19.1 4.9-1.4 1.4"></path></svg></a><a href="Power-Sheet.dc.html" aria-label="Battery not yet reported. Open power settings" style="text-decoration: none; color: #ffffff; height: 44px; display: flex; align-items: center; gap: 6px; padding: 0 12px; background: rgba(14,18,16,0.6); border: 1px solid #2a312c; border-radius: 8px; font-size: 15px; line-height: 20px; font-weight: 600; font-variant-numeric: tabular-nums"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="width: 20px; height: 20px; color: #9e9e9e"><rect width="16" height="10" x="2" y="7" rx="2"></rect><path d="M22 11v2"></path><path d="M6 11v2"></path><path d="M10 11v2"></path></svg>--</a></div>
+</header>
+<main style="flex-grow: 1; padding: 12px 16px; display: flex; flex-direction: column; gap: 12px; ">
+<h1 class="sr">Station status</h1>
+<div role="status" class="sr">First step: secure this Wi-Fi. Receive and transmit wait on it.</div>
+<section role="region" aria-label="First step: secure this Wi-Fi" style="background: #1a1f1c; border: 2px solid #f5c518; border-radius: 12px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px"><div style="display: flex; align-items: center; gap: 8px; color: #f5c518; font-size: 17px; line-height: 22px; font-weight: 700"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="width: 22px; height: 22px; stroke-width: 2"><path d="M12 20h.01"></path><path d="M2 8.82a15 15 0 0 1 20 0"></path><path d="M5 12.86a10 10 0 0 1 14 0"></path><path d="M8.5 16.43a5 5 0 0 1 7 0"></path></svg><span>First step: secure this Wi-Fi</span></div><div style="font-size: 15px; line-height: 20px">This bridge is on an open Wi-Fi named VectorBridge-7C2A. Anyone nearby can join it. Set a passphrase to enable setup and transmit.</div><a href="WiFi-Secure.dc.html" style="min-height: 48px; display: flex; align-items: center; justify-content: center; background: #3fbf4f; border: 0; border-radius: 8px; color: #0e1210; font-size: 17px; line-height: 22px; font-weight: 600; text-decoration: none; margin-top: 4px">Secure This Wi-Fi</a></section><a href="Receive-Sheet.dc.html" aria-label="Receive: Waiting until this Wi-Fi is secured. Open receive settings" style="text-decoration: none; color: #ffffff; width: 100%; background: #1a1f1c; border: 1px solid #2a312c; border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 6px; text-align: left">
+<div style="width: 100%; display: flex; align-items: center; justify-content: space-between"><span style="display: flex; align-items: center; gap: 6px; font-size: 12px; line-height: 16px; font-weight: 600; color: #9e9e9e"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="width: 16px; height: 16px"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>Receive</span><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="width: 18px; height: 18px; color: #9e9e9e"><path d="m9 18 6-6-6-6"></path></svg></div>
+<h2 style="margin: 0; display: flex; align-items: center; gap: 10px; color: #9e9e9e"><span style="display: flex"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="width: 30px; height: 30px; stroke-width: 2"><rect width="18" height="11" x="3" y="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg></span><span style="font-size: 34px; line-height: 41px; font-weight: 700">Waiting</span></h2>
+<div style="font-size: 15px; line-height: 20px">Waits until this Wi-Fi is secured.</div>
+
+</a><section aria-labelledby="htx" style="background: #1a1f1c; border: 1px solid #2a312c; border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 6px; "><div style="display: flex; align-items: center; gap: 6px; font-size: 12px; line-height: 16px; font-weight: 600; color: #9e9e9e"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="width: 16px; height: 16px"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"></path></svg>Transmit</div><h2 id="htx" style="margin: 0; display: flex; align-items: center; gap: 10px; color: #9e9e9e"><span style="display: flex"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="width: 30px; height: 30px; stroke-width: 2"><rect width="18" height="11" x="3" y="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg></span><span style="font-size: 34px; line-height: 41px; font-weight: 700">Locked</span></h2><div style="font-size: 15px; line-height: 20px">The bridge refuses to key while this Wi-Fi is open. Secure the Wi-Fi first.</div><button type="button" disabled aria-describedby="htxwhy" style="min-height: 48px; background: rgba(14,18,16,0.6); border: 1px solid #2a312c; border-radius: 8px; color: #9e9e9e; font-size: 17px; line-height: 22px; font-weight: 600; cursor: not-allowed">Unlock Transmit</button><p id="htxwhy" style="margin: 0; font-size: 13px; line-height: 18px; color: #f5c518">Waits on Wi-Fi.</p></section><section aria-labelledby="hcon" style="background: #1a1f1c; border: 1px solid #2a312c; border-radius: 12px">
+<div style="min-height: 44px; display: flex; align-items: center; justify-content: space-between; padding: 0 4px 0 14px; border-bottom: 1px solid #2a312c"><h2 id="hcon" style="margin: 0; font-size: 17px; line-height: 22px; font-weight: 600">Connect</h2><a href="Apps-Ports.dc.html" style="min-height: 44px; display: flex; align-items: center; gap: 2px; padding: 0 10px; font-size: 15px; line-height: 20px; text-decoration: none">Apps and Ports<svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="width: 16px; height: 16px"><path d="m9 18 6-6-6-6"></path></svg></a></div>
+<div style="padding: 8px 14px 12px; display: flex; flex-direction: column; gap: 4px">
+<div style="min-height: 44px; display: flex; align-items: center; gap: 8px"><div style="flex-grow: 1"><div style="font-size: 12px; line-height: 16px; color: #9e9e9e">Name</div><div class="mono" style="font-size: 17px; line-height: 22px">vectorbridge.local</div></div><button type="button" aria-label="Copy vectorbridge.local" style="width: 44px; height: 44px; flex: none; display: flex; align-items: center; justify-content: center; background: rgba(14,18,16,0.6); border: 1px solid #2a312c; border-radius: 8px"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="width: 18px; height: 18px"><rect width="14" height="14" x="8" y="8" rx="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg></button></div>
+<div style="min-height: 44px; display: flex; align-items: center; gap: 8px"><div style="flex-grow: 1"><div style="font-size: 12px; line-height: 16px; color: #9e9e9e">Address on VectorBridge-7C2A</div><div class="mono" style="font-size: 17px; line-height: 22px">10.42.0.1</div></div><button type="button" aria-label="Copy 10.42.0.1" style="width: 44px; height: 44px; flex: none; display: flex; align-items: center; justify-content: center; background: rgba(14,18,16,0.6); border: 1px solid #2a312c; border-radius: 8px"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="width: 18px; height: 18px"><rect width="14" height="14" x="8" y="8" rx="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg></button></div>
+<p style="margin: 0; font-size: 13px; line-height: 18px; color: #9e9e9e">If the name does not open (Android and some browsers), type the address. A "continue to site" page on Android is expected; tap through it.</p>
+<p style="margin: 0; font-size: 13px; line-height: 18px; color: #9e9e9e">Both are printed on the label under the bridge. The bridge light winks once every 2 s while it waits for you, and stays on once your phone has joined.</p>
+</div>
+</section><p style="margin: 0; font-size: 13px; line-height: 18px; color: #9e9e9e">Until the Wi-Fi is secured every page opens here. Settings cannot be saved and the bridge will not key the radio.</p><div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 0 4px"><a href="Docs-Index.dc.html" style="min-height: 44px; display: flex; align-items: center; padding: 0 8px; font-size: 15px; line-height: 20px">Docs and Help</a><a href="Display-Sheet.dc.html" style="min-height: 44px; display: flex; align-items: center; padding: 0 8px; font-size: 15px; line-height: 20px">Display</a><a href="TxTimeLimit-Sheet.dc.html" style="min-height: 44px; display: flex; align-items: center; padding: 0 8px; font-size: 15px; line-height: 20px">Transmit Time Limit</a><a href="Support-Sheet.dc.html" style="min-height: 44px; display: flex; align-items: center; padding: 0 8px; font-size: 15px; line-height: 20px">Support Bundle</a><a href="KitsReset-Sheet.dc.html" style="min-height: 44px; display: flex; align-items: center; padding: 0 8px; font-size: 15px; line-height: 20px">Kits and Reset</a></div><p class="mono" style="margin: 0; text-align: center; font-size: 12px; line-height: 16px; color: #9e9e9e">VectorBridge 0.1.5 (e15c5a0)</p>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1180}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

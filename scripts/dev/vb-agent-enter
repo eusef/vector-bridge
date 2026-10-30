@@ -1,0 +1,11 @@
+#!/bin/sh
+# `vb-maintenance enter` for bench cards, without its connected-client refusal: an agent deploy
+# may drop the iPad or a desktop app for the few minutes it takes. Same steps otherwise.
+set -eu
+MOUNT=/persist
+if ! findmnt -no FSTYPE / | grep -q overlay; then echo "already in maintenance mode"; exit 0; fi
+mount -o remount,rw "$MOUNT"
+touch "$MOUNT/vector-bridge/maintenance"; mount -o remount,ro "$MOUNT"
+/usr/bin/raspi-config nonint disable_overlayfs
+echo "rebooting into maintenance mode"
+/usr/sbin/reboot

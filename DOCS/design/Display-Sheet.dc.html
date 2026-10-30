@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Display · VectorBridge</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;background:#0e1210}
+.r{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,"Segoe UI","Helvetica Neue",Arial,sans-serif;color:#ffffff;background:#0e1210}
+.r *{box-sizing:border-box}
+:root{color-scheme:dark}
+.r{overflow-wrap:anywhere}
+.sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.ic{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.mono{font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;font-variant-numeric:tabular-nums}
+button{font-family:inherit;color:inherit;cursor:pointer}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid #3fbf4f;outline-offset:2px}
+a{color:#3fbf4f}a:hover{color:#6fd57b}
+dl{margin:0}dd{margin:0}
+input[type=range]{width:100%;height:44px;margin:0;accent-color:#3fbf4f}
+input[type=checkbox],input[type=radio]{width:22px;height:22px;margin:0;accent-color:#3fbf4f;flex:none}
+input[type=text],input[type=password],select{font-family:inherit;font-size:17px;line-height:22px;color:#ffffff;background:rgba(14,18,16,0.6);border:1px solid #2a312c;border-radius:8px;min-height:44px;padding:0 12px;width:100%}
+ol,ul{margin:0}
+</style>
+</helmet>
+<div class="r" style="width: 390px; height: 1000px; position: relative; overflow: hidden">
+<div aria-hidden="true" style="position: absolute; inset: 0; opacity: 0.35">
+<div style="height: 64px; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; background: #1a1f1c; border-bottom: 1px solid #2a312c"><span style="font-size: 20px; line-height: 25px; font-weight: 700">VectorBridge</span><span style="height: 44px; display: flex; align-items: center; padding: 0 12px; border: 1px solid #2a312c; border-radius: 8px; font-size: 15px; font-weight: 600">72%</span></div>
+</div>
+<div aria-hidden="true" style="position: absolute; inset: 0; background: rgba(0,0,0,0.55)"></div>
+<section role="dialog" aria-modal="true" aria-labelledby="s34h" style="position: absolute; left: 0; right: 0; bottom: 0; top: 72px; background: #1a1f1c; border-top: 1px solid #2a312c; border-radius: 12px 12px 0 0; padding: 8px 16px 16px; display: flex; flex-direction: column; gap: 12px">
+<div aria-hidden="true" style="align-self: center; width: 36px; height: 5px; border-radius: 999px; background: #2a312c"></div>
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 8px">
+<div style="flex-grow: 1"><h2 id="s34h" tabindex="-1" style="margin: 0; font-size: 20px; line-height: 25px; font-weight: 700">Display</h2></div>
+<a href="Home-Ready.dc.html" aria-label="Close" style="width: 44px; height: 44px; flex: none; display: flex; align-items: center; justify-content: center; background: rgba(14,18,16,0.6); border: 1px solid #2a312c; border-radius: 999px; color: #ffffff"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="width: 20px; height: 20px"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></a>
+</div>
+<fieldset style="border: 0; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px">
+<legend style="padding: 0; margin-bottom: 4px; font-size: 17px; line-height: 22px; font-weight: 600">Appearance</legend>
+<label style="min-height: 64px; display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: rgba(14,18,16,0.6); border: 1px solid #3fbf4f; border-radius: 8px; cursor: pointer"><input type="radio" name="theme" value="auto" checked><span style="display: flex; flex-direction: column"><span style="font-size: 17px; line-height: 22px; font-weight: 600">Match the phone</span><span style="font-size: 12px; line-height: 16px; color: #9e9e9e">Dark or light with the phone's setting</span></span></label>
+<label style="min-height: 64px; display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: rgba(14,18,16,0.6); border: 1px solid #9e9e9e; border-radius: 8px; cursor: pointer"><input type="radio" name="theme" value="light"><span style="display: flex; flex-direction: column"><span style="font-size: 17px; line-height: 22px; font-weight: 600">Daylight</span><span style="font-size: 12px; line-height: 16px; color: #9e9e9e">Bright, for full sun in the field</span></span></label>
+<label style="min-height: 64px; display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: rgba(14,18,16,0.6); border: 1px solid #9e9e9e; border-radius: 8px; cursor: pointer"><input type="radio" name="theme" value="dark"><span style="display: flex; flex-direction: column"><span style="font-size: 17px; line-height: 22px; font-weight: 600">Dark</span><span style="font-size: 12px; line-height: 16px; color: #9e9e9e">The default at a desk</span></span></label>
+<label style="min-height: 64px; display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: rgba(14,18,16,0.6); border: 1px solid #9e9e9e; border-radius: 8px; cursor: pointer"><input type="radio" name="theme" value="night"><span style="display: flex; flex-direction: column"><span style="font-size: 17px; line-height: 22px; font-weight: 600">Night Ops</span><span style="font-size: 12px; line-height: 16px; color: #9e9e9e">Red on black. Keeps night vision. Turn the phone brightness down too.</span></span></label>
+<p style="margin: 0; font-size: 13px; line-height: 18px; color: #9e9e9e">Saved on this phone, not on the bridge. Each phone chooses its own.</p>
+</fieldset>
+<div style="border-top: 1px solid #2a312c; padding-top: 14px; display: flex; flex-direction: column; gap: 6px"><div style="font-size: 15px; line-height: 20px; font-weight: 600">Text size</div><div style="font-size: 15px; line-height: 20px">This page follows the phone's text size and browser zoom. At the largest sizes cards stack into one column and nothing is cut off.</div><p style="margin: 0; font-size: 13px; line-height: 18px; color: #9e9e9e">Change it in the phone's settings, not here.</p></div>
+<div style="border-top: 1px solid #2a312c; padding-top: 12px; display: flex; flex-direction: column; gap: 6px"><div style="font-size: 15px; line-height: 20px; font-weight: 600">Quick switch</div><p style="margin: 0; font-size: 13px; line-height: 18px; color: #9e9e9e">On the home page, the appearance icon next to the battery cycles Daylight, Dark and Night Ops with one tap. No menu needed with gloves on.</p></div>
+</section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1000}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

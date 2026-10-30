@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Docs Article · VectorBridge</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;background:#0e1210}
+.r{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,"Segoe UI","Helvetica Neue",Arial,sans-serif;color:#ffffff;background:#0e1210}
+.r *{box-sizing:border-box}
+:root{color-scheme:dark}
+.r{overflow-wrap:anywhere}
+.sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.ic{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.mono{font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;font-variant-numeric:tabular-nums}
+button{font-family:inherit;color:inherit;cursor:pointer}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid #3fbf4f;outline-offset:2px}
+a{color:#3fbf4f}a:hover{color:#6fd57b}
+dl{margin:0}dd{margin:0}
+input[type=range]{width:100%;height:44px;margin:0;accent-color:#3fbf4f}
+input[type=checkbox],input[type=radio]{width:22px;height:22px;margin:0;accent-color:#3fbf4f;flex:none}
+input[type=text],input[type=password],select{font-family:inherit;font-size:17px;line-height:22px;color:#ffffff;background:rgba(14,18,16,0.6);border:1px solid #2a312c;border-radius:8px;min-height:44px;padding:0 12px;width:100%}
+ol,ul{margin:0}
+</style>
+</helmet>
+<div class="r" style="width: 390px; height: 1700px; display: flex; flex-direction: column; overflow: hidden">
+<header style="height: 64px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; background: #1a1f1c; border-bottom: 1px solid #2a312c">
+<div style="display: flex; align-items: center; gap: 8px"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="width: 22px; height: 22px; color: #3fbf4f"><path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9"></path><path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5"></path><circle cx="12" cy="12" r="2"></circle><path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5"></path><path d="M19.1 4.9C23 8.8 23 15.1 19.1 19"></path></svg><span style="font-size: 20px; line-height: 25px; font-weight: 700">VectorBridge</span></div>
+<div style="display: flex; align-items: center; gap: 8px"><a href="Display-Sheet.dc.html" aria-label="Appearance: dark. Tap to switch. Open display settings" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; background: rgba(14,18,16,0.6); border: 1px solid #2a312c; border-radius: 8px; color: #ffffff"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="width: 20px; height: 20px"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2"></path><path d="M12 20v2"></path><path d="m4.9 4.9 1.4 1.4"></path><path d="m17.7 17.7 1.4 1.4"></path><path d="M2 12h2"></path><path d="M20 12h2"></path><path d="m6.3 17.7-1.4 1.4"></path><path d="m19.1 4.9-1.4 1.4"></path></svg></a><a href="Power-Sheet.dc.html" aria-label="Battery 72 percent, not charging. Open power settings" style="text-decoration: none; color: #ffffff; height: 44px; display: flex; align-items: center; gap: 6px; padding: 0 12px; background: rgba(14,18,16,0.6); border: 1px solid #2a312c; border-radius: 8px; font-size: 15px; line-height: 20px; font-weight: 600; font-variant-numeric: tabular-nums"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="width: 20px; height: 20px; color: #3fbf4f"><rect width="16" height="10" x="2" y="7" rx="2"></rect><path d="M22 11v2"></path><path d="M6 11v2"></path><path d="M10 11v2"></path></svg>72%</a></div>
+</header>
+<main style="flex-grow: 1; padding: 12px 16px; display: flex; flex-direction: column; gap: 12px; ">
+<h1 class="sr">Station status</h1>
+<div role="status" class="sr">Documentation article.</div>
+<a href="Docs-Index.dc.html" style="min-height: 44px; display: flex; align-items: center; gap: 4px; font-size: 15px; line-height: 20px; text-decoration: none; align-self: flex-start"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="width: 18px; height: 18px"><path d="m12 19-7-7 7-7"></path><path d="M19 12H5"></path></svg>Docs</a><article style="display: flex; flex-direction: column; gap: 12px">
+<h1 style="margin: 0; font-size: 28px; line-height: 34px; font-weight: 700">Alerts and the status light</h1>
+<p style="margin: 0; font-size: 17px; line-height: 24px">Everything here is local. The bridge never sends a notification over the internet, so alerts work off-grid and only reach a phone that has the bridge's home screen open.</p>
+<section style="background: #1a1f1c; border: 1px solid #2a312c; border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 0px; "><div style="font-size: 12px; line-height: 16px; font-weight: 600; color: #9e9e9e">On this page</div><a href="#" style="min-height: 36px; display: flex; align-items: center; font-size: 15px; line-height: 20px">What triggers an alert</a><a href="#" style="min-height: 36px; display: flex; align-items: center; font-size: 15px; line-height: 20px">Choosing how each alert reaches you</a><a href="#" style="min-height: 36px; display: flex; align-items: center; font-size: 15px; line-height: 20px">On the phone</a><a href="#" style="min-height: 36px; display: flex; align-items: center; font-size: 15px; line-height: 20px">The status light</a><a href="#" style="min-height: 36px; display: flex; align-items: center; font-size: 15px; line-height: 20px">The beeper</a><a href="#" style="min-height: 36px; display: flex; align-items: center; font-size: 15px; line-height: 20px">Hardware</a></section>
+<h2 style="margin: 16px 0 0; font-size: 22px; line-height: 28px; font-weight: 700">What triggers an alert</h2>
+<p style="margin: 0; font-size: 17px; line-height: 24px">An alert fires when something that was working stops. Something that has never worked is shown on the home screen but does not interrupt you.</p>
+<ul style="margin: 0; padding-left: 20px; font-size: 17px; line-height: 24px; display: flex; flex-direction: column; gap: 4px"><li><b>Radio control lost</b>: the radio stopped answering on CAT</li><li><b>Receive audio lost</b>: audio from the radio stopped arriving</li><li><b>Unexpected transmit</b>: the radio is keyed and the bridge did not ask for it</li></ul>
+<h2 style="margin: 16px 0 0; font-size: 22px; line-height: 28px; font-weight: 700">The status light</h2>
+<table style="width: 100%; border-collapse: collapse; font-size: 15px; line-height: 20px; margin-top: 4px">
+<thead><tr><th scope="col" style="text-align: left; padding: 6px 8px 6px 0; font-size: 12px; line-height: 16px; font-weight: 400; color: #9e9e9e; border-bottom: 1px solid #2a312c">Pattern</th><th scope="col" style="text-align: left; padding: 6px 0; font-size: 12px; line-height: 16px; font-weight: 400; color: #9e9e9e; border-bottom: 1px solid #2a312c">Meaning</th></tr></thead>
+<tbody>
+<tr><td style="padding: 8px 8px 8px 0; border-bottom: 1px solid #2a312c; vertical-align: top">Even blink, half a second on and off</td><td style="padding: 8px 0; border-bottom: 1px solid #2a312c; vertical-align: top">No readiness result yet, or the Wi-Fi is down</td></tr>
+<tr><td style="padding: 8px 8px 8px 0; border-bottom: 1px solid #2a312c; vertical-align: top">One short wink every two seconds</td><td style="padding: 8px 0; border-bottom: 1px solid #2a312c; vertical-align: top">Access point up, waiting for a client</td></tr>
+<tr><td style="padding: 8px 8px 8px 0; border-bottom: 1px solid #2a312c; vertical-align: top">Steady on</td><td style="padding: 8px 0; border-bottom: 1px solid #2a312c; vertical-align: top">A client is connected</td></tr>
+<tr><td style="padding: 8px 8px 8px 0; vertical-align: top">Fast flash</td><td style="padding: 8px 0; vertical-align: top">Fault: something that was working has stopped</td></tr>
+</tbody></table>
+<p style="margin: 0; font-size: 17px; line-height: 24px">A fault clears itself when the failed check recovers. A fault outranks everything else, so the fast flash continues even if the Wi-Fi goes down.</p>
+<h2 style="margin: 16px 0 0; font-size: 22px; line-height: 28px; font-weight: 700">Hardware</h2>
+<p style="margin: 0; font-size: 17px; line-height: 24px">Set these as <span class="mono" style="font-size: 15px; padding: 1px 6px; border-radius: 4px; background: rgba(255,255,255,0.06)">Environment=</span> lines in the tuner service. The installer does all of this for the ACT LED.</p>
+<pre class="mono" style="margin: 0; padding: 12px; border-radius: 8px; background: rgba(255,255,255,0.06); font-size: 13px; line-height: 18px; overflow-x: auto; white-space: pre">VECTOR_BRIDGE_LED=/sys/class/leds/ACT/brightness
+VECTOR_BRIDGE_BEEPER=/sys/class/leds/&lt;label&gt;/brightness</pre>
+<div style="background: rgba(255,255,255,0.06); border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 6px"><div style="font-size: 15px; line-height: 20px; font-weight: 600">Tip</div><p style="margin: 0; font-size: 13px; line-height: 18px; color: #9e9e9e">A passive piezo needs a tone signal and is not supported by this interface.</p></div>
+</article>
+<div style="display: flex; justify-content: space-between; border-top: 1px solid #2a312c; padding-top: 12px"><a href="Docs-Index.dc.html" style="min-height: 44px; display: flex; align-items: center; gap: 4px; font-size: 15px; text-decoration: none"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="width: 16px; height: 16px"><path d="m12 19-7-7 7-7"></path><path d="M19 12H5"></path></svg>Transmit checks</a><a href="Docs-Index.dc.html" style="min-height: 44px; display: flex; align-items: center; gap: 4px; font-size: 15px; text-decoration: none">Field network<svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="width: 16px; height: 16px"><path d="m9 18 6-6-6-6"></path></svg></a></div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1700}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

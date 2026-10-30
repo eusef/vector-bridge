@@ -1,0 +1,24 @@
+.venv/
+tools/.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+*.wav
+# jt9 scratch files, in case it is ever run from the repo root
+decoded.txt
+jt9_wisdom.dat
+timer.out
+# release images and their checksums and package lists: too big for git, published outside the repo
+release/
+# build stamp: tools/deploy_pi.sh and scripts/install.sh write the git commit here
+src/vector_bridge/_build.py
+# secrets: never commit keys, certificates or env files
+.env*
+*.pem
+*.p8
+*.p12
+*.key
+*.mobileprovision

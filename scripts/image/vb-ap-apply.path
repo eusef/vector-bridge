@@ -1,0 +1,11 @@
+[Unit]
+Description=VectorBridge: a Wi-Fi name and passphrase change is waiting
+After=persist.mount
+
+[Path]
+# Written by the web UI (vector_bridge.apsetup). Also checked at boot, which is how the
+# change gets applied on the writable boot after a field-mode request.
+PathExists=/persist/vector-bridge/ap-pending.json
+
+[Install]
+WantedBy=multi-user.target

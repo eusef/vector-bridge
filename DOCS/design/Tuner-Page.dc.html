@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Level Tuner · VectorBridge</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;background:#0e1210}
+.r{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,"Segoe UI","Helvetica Neue",Arial,sans-serif;color:#ffffff;background:#0e1210}
+.r *{box-sizing:border-box}
+:root{color-scheme:dark}
+.r{overflow-wrap:anywhere}
+.sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.ic{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.mono{font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;font-variant-numeric:tabular-nums}
+button{font-family:inherit;color:inherit;cursor:pointer}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid #3fbf4f;outline-offset:2px}
+a{color:#3fbf4f}a:hover{color:#6fd57b}
+dl{margin:0}dd{margin:0}
+input[type=range]{width:100%;height:44px;margin:0;accent-color:#3fbf4f}
+input[type=checkbox],input[type=radio]{width:22px;height:22px;margin:0;accent-color:#3fbf4f;flex:none}
+input[type=text],input[type=password],select{font-family:inherit;font-size:17px;line-height:22px;color:#ffffff;background:rgba(14,18,16,0.6);border:1px solid #2a312c;border-radius:8px;min-height:44px;padding:0 12px;width:100%}
+ol,ul{margin:0}
+</style>
+</helmet>
+<div class="r" style="width: 390px; height: 1700px; display: flex; flex-direction: column; overflow: hidden">
+<header style="height: 64px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; background: #1a1f1c; border-bottom: 1px solid #2a312c">
+<div style="display: flex; align-items: center; gap: 8px"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="width: 22px; height: 22px; color: #3fbf4f"><path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9"></path><path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5"></path><circle cx="12" cy="12" r="2"></circle><path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5"></path><path d="M19.1 4.9C23 8.8 23 15.1 19.1 19"></path></svg><span style="font-size: 20px; line-height: 25px; font-weight: 700">VectorBridge</span></div>
+<div style="display: flex; align-items: center; gap: 8px"><a href="Display-Sheet.dc.html" aria-label="Appearance: dark. Tap to switch. Open display settings" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; background: rgba(14,18,16,0.6); border: 1px solid #2a312c; border-radius: 8px; color: #ffffff"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="width: 20px; height: 20px"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2"></path><path d="M12 20v2"></path><path d="m4.9 4.9 1.4 1.4"></path><path d="m17.7 17.7 1.4 1.4"></path><path d="M2 12h2"></path><path d="M20 12h2"></path><path d="m6.3 17.7-1.4 1.4"></path><path d="m19.1 4.9-1.4 1.4"></path></svg></a><a href="Power-Sheet.dc.html" aria-label="Battery 72 percent, not charging. Open power settings" style="text-decoration: none; color: #ffffff; height: 44px; display: flex; align-items: center; gap: 6px; padding: 0 12px; background: rgba(14,18,16,0.6); border: 1px solid #2a312c; border-radius: 8px; font-size: 15px; line-height: 20px; font-weight: 600; font-variant-numeric: tabular-nums"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="width: 20px; height: 20px; color: #3fbf4f"><rect width="16" height="10" x="2" y="7" rx="2"></rect><path d="M22 11v2"></path><path d="M6 11v2"></path><path d="M10 11v2"></path></svg>72%</a></div>
+</header>
+<main style="flex-grow: 1; padding: 12px 16px; display: flex; flex-direction: column; gap: 12px; ">
+<h1 class="sr">Station status</h1>
+<div role="status" class="sr">Level tuner. RX in range, TX hot.</div>
+<a href="Home-Ready.dc.html" style="min-height: 44px; display: flex; align-items: center; gap: 4px; font-size: 15px; line-height: 20px; text-decoration: none; align-self: flex-start"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="width: 18px; height: 18px"><path d="m12 19-7-7 7-7"></path><path d="M19 12H5"></path></svg>Home</a><h1 style="margin: 0; font-size: 28px; line-height: 34px; font-weight: 700">Level Tuner</h1><div role="status" style="display: flex; align-items: center; gap: 6px; font-size: 13px; line-height: 18px; color: #9e9e9e"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="width: 14px; height: 14px; color: #3fbf4f"><circle cx="12" cy="12" r="10"></circle><path d="m9 12 2 2 4-4"></path></svg>Connected to the audio service. Readings every 100 ms.</div><section style="background: #1a1f1c; border: 1px solid #2a312c; border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 8px; "><div style="display: flex; flex-direction: column; gap: 6px">
+<div style="display: flex; justify-content: space-between; align-items: baseline"><span style="font-size: 15px; line-height: 20px; font-weight: 600">RX, radio into bridge</span><span><span class="mono" style="font-size: 28px; line-height: 34px; font-weight: 700">-18.4</span> <span style="font-size: 12px; color: #9e9e9e">dBFS</span></span></div>
+<div role="meter" aria-label="RX, radio into bridge level" aria-valuetext="-18.4 dBFS, In the target range. Leave it." style="position: relative; height: 28px; border-radius: 6px; background: rgba(255,255,255,0.06); border: 1px solid #2a312c; overflow: hidden">
+<div aria-hidden="true" style="position: absolute; top: 0; bottom: 0; left: 66%; width: 14%; background: rgba(63,191,79,0.16); border-left: 1px solid #3fbf4f; border-right: 1px solid #3fbf4f"></div>
+<div aria-hidden="true" style="position: absolute; top: 0; bottom: 0; left: 0; width: 58%; background: rgba(255,255,255,0.12)"></div>
+<div aria-hidden="true" style="position: absolute; top: 0; bottom: 0; left: 0; width: 69%; background: #3fbf4f"></div>
+<div aria-hidden="true" style="position: absolute; top: 0; bottom: 0; left: 74%; width: 2px; background: #ffffff; opacity: 0.85"></div>
+</div>
+<div aria-hidden="true" class="mono" style="display: flex; justify-content: space-between; font-size: 10px; line-height: 12px; color: #9e9e9e"><span>-60</span><span>-40</span><span>-20</span><span>-12</span><span>0</span></div>
+<div style="padding: 8px 10px; border-radius: 8px; background: rgba(255,255,255,0.06); font-size: 13px; line-height: 18px; color: #3fbf4f; font-weight: 600">In the target range. Leave it.</div>
+</div><div style="display: flex; justify-content: space-between; font-size: 12px; line-height: 16px; color: #9e9e9e"><span>peak <b class="mono">-14.2</b> · rms <b class="mono">-24.0</b></span><span>clips <b class="mono">0</b></span></div><div style="display: flex; justify-content: space-between; font-size: 15px; line-height: 20px; margin-top: 4px"><label for="rxg">Capture level</label><span class="mono">46%</span></div><input id="rxg" type="range" min="0" max="100" value="46" aria-valuetext="46 percent"><p style="margin: 0; font-size: 13px; line-height: 18px; color: #9e9e9e">Target: peaks between -20 and -12 dBFS with the radio's volume where you normally run it. Set the radio's output first, then this slider.</p></section><section style="background: #1a1f1c; border: 1px solid #2a312c; border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 8px; "><div style="display: flex; flex-direction: column; gap: 6px">
+<div style="display: flex; justify-content: space-between; align-items: baseline"><span style="font-size: 15px; line-height: 20px; font-weight: 600">TX, bridge into radio</span><span><span class="mono" style="font-size: 28px; line-height: 34px; font-weight: 700">-6.1</span> <span style="font-size: 12px; color: #9e9e9e">dBFS</span></span></div>
+<div role="meter" aria-label="TX, bridge into radio level" aria-valuetext="-6.1 dBFS, Hot. Lower the drive or the app's level." style="position: relative; height: 28px; border-radius: 6px; background: rgba(255,255,255,0.06); border: 1px solid #2a312c; overflow: hidden">
+<div aria-hidden="true" style="position: absolute; top: 0; bottom: 0; left: 76%; width: 16%; background: rgba(63,191,79,0.16); border-left: 1px solid #3fbf4f; border-right: 1px solid #3fbf4f"></div>
+<div aria-hidden="true" style="position: absolute; top: 0; bottom: 0; left: 0; width: 80%; background: rgba(255,255,255,0.12)"></div>
+<div aria-hidden="true" style="position: absolute; top: 0; bottom: 0; left: 0; width: 90%; background: #f5c518"></div>
+<div aria-hidden="true" style="position: absolute; top: 0; bottom: 0; left: 92%; width: 2px; background: #ffffff; opacity: 0.85"></div>
+</div>
+<div aria-hidden="true" class="mono" style="display: flex; justify-content: space-between; font-size: 10px; line-height: 12px; color: #9e9e9e"><span>-60</span><span>-40</span><span>-20</span><span>-12</span><span>0</span></div>
+<div style="padding: 8px 10px; border-radius: 8px; background: rgba(255,255,255,0.06); font-size: 13px; line-height: 18px; color: #f5c518; font-weight: 600">Hot. Lower the drive or the app's level.</div>
+</div><div style="display: flex; justify-content: space-between; font-size: 12px; line-height: 16px; color: #9e9e9e"><span>peak <b class="mono">-3.0</b> · rms <b class="mono">-9.8</b></span><span>clips <b class="mono">2</b></span></div><div style="display: flex; justify-content: space-between; font-size: 15px; line-height: 20px; margin-top: 4px"><label for="txg">Audio drive</label><span class="mono">70%</span></div><input id="txg" type="range" min="0" max="100" value="70" aria-valuetext="70 percent"><p style="margin: 0; font-size: 13px; line-height: 18px; color: #9e9e9e">On a radio that reports ALC the drive check sets this for you. On the KX2, QMX and uSDX watch the radio's ALC meter: about 4 bars on the KX2.</p><div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px"><button type="button" style="min-height: 44px; display: flex; align-items: center; justify-content: center; gap: 4px; background: rgba(14,18,16,0.6); border: 1px solid #2a312c; border-radius: 8px; color: #ffffff; font-size: 15px; line-height: 20px; text-decoration: none; padding: 0 12px; "><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="width: 16px; height: 16px"><path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9"></path><path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5"></path><circle cx="12" cy="12" r="2"></circle><path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5"></path><path d="M19.1 4.9C23 8.8 23 15.1 19.1 19"></path></svg>Play Test Tone</button><button type="button" style="min-height: 44px; display: flex; align-items: center; justify-content: center; gap: 4px; background: rgba(14,18,16,0.6); border: 1px solid #2a312c; border-radius: 8px; color: #ffffff; font-size: 15px; line-height: 20px; text-decoration: none; padding: 0 12px; ">Save Levels to Kit</button></div><p style="margin: 0; font-size: 13px; line-height: 18px; color: #9e9e9e">The test tone plays 1500 Hz in place of app audio. It does not key the radio from here; keying only happens in Unlock Transmit.</p></section><section style="background: #1a1f1c; border: 1px solid #2a312c; border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 8px; "><div style="font-size: 15px; line-height: 20px; font-weight: 600">Sound card controls</div><p style="margin: 0; font-size: 13px; line-height: 18px; color: #9e9e9e">Card 1, IC-705 USB Audio CODEC. Read from the card every few seconds; the sliders above set them.</p><table style="width: 100%; border-collapse: collapse; font-size: 13px; line-height: 18px">
+<thead><tr><th scope="col" style="text-align: left; padding: 6px 0; font-size: 11px; color: #9e9e9e; font-weight: 500; border-bottom: 1px solid #2a312c">Control</th><th scope="col" style="text-align: right; padding: 6px 0; font-size: 11px; color: #9e9e9e; font-weight: 500; border-bottom: 1px solid #2a312c">Value</th><th scope="col" style="text-align: right; padding: 6px 0; font-size: 11px; color: #9e9e9e; font-weight: 500; border-bottom: 1px solid #2a312c">dB</th></tr></thead>
+<tbody><tr><td style="padding: 6px 0; border-bottom: 1px solid #2a312c">Mic capture</td><td class="mono" style="text-align: right; border-bottom: 1px solid #2a312c">46%</td><td class="mono" style="text-align: right; border-bottom: 1px solid #2a312c">+8.0</td></tr>
+<tr><td style="padding: 6px 0; border-bottom: 1px solid #2a312c">Speaker playback</td><td class="mono" style="text-align: right; border-bottom: 1px solid #2a312c">70%</td><td class="mono" style="text-align: right; border-bottom: 1px solid #2a312c">-9.0</td></tr>
+<tr><td style="padding: 6px 0">Auto gain control</td><td class="mono" style="text-align: right">off</td><td class="mono" style="text-align: right"></td></tr></tbody></table></section><section role="region" aria-label="Audio adapter not found" style="background: #1a1f1c; border: 2px solid #e0332e; border-radius: 12px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px"><div style="display: flex; align-items: center; gap: 8px; color: #e0332e; font-size: 17px; line-height: 22px; font-weight: 700"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="width: 22px; height: 22px; stroke-width: 2"><circle cx="12" cy="12" r="10"></circle><path d="m15 9-6 6"></path><path d="m9 9 6 6"></path></svg><span>Audio adapter not found</span></div><div style="font-size: 15px; line-height: 20px">No USB sound card since 3 min ago. Unplug it and plug it back in; the meters resume by themselves.</div></section>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1700}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

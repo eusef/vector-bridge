@@ -1,0 +1,16 @@
+[Unit]
+Description=VectorBridge: carry the Wi-Fi on a USB adapter when one is plugged in, else the built-in radio
+# After first boot: the access point profile does not exist until vb-firstboot makes it.
+After=NetworkManager.service persist.mount vb-firstboot.service
+Wants=NetworkManager.service
+
+[Service]
+# Checks every 2 s: an adapter plugged into any USB port takes over the access point (5 GHz when
+# it can) or the joined network; unplugged, everything moves back to the built-in radio.
+ExecStart=/opt/vector-bridge/venv/bin/python -m vector_bridge.wifiradio watch
+Restart=always
+RestartSec=5
+StandardOutput=journal
+
+[Install]
+WantedBy=multi-user.target

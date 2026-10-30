@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Restart Services · VectorBridge</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;background:#0e1210}
+.r{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,"Segoe UI","Helvetica Neue",Arial,sans-serif;color:#ffffff;background:#0e1210}
+.r *{box-sizing:border-box}
+:root{color-scheme:dark}
+.r{overflow-wrap:anywhere}
+.sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.ic{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.mono{font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;font-variant-numeric:tabular-nums}
+button{font-family:inherit;color:inherit;cursor:pointer}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid #3fbf4f;outline-offset:2px}
+a{color:#3fbf4f}a:hover{color:#6fd57b}
+dl{margin:0}dd{margin:0}
+input[type=range]{width:100%;height:44px;margin:0;accent-color:#3fbf4f}
+input[type=checkbox],input[type=radio]{width:22px;height:22px;margin:0;accent-color:#3fbf4f;flex:none}
+input[type=text],input[type=password],select{font-family:inherit;font-size:17px;line-height:22px;color:#ffffff;background:rgba(14,18,16,0.6);border:1px solid #2a312c;border-radius:8px;min-height:44px;padding:0 12px;width:100%}
+ol,ul{margin:0}
+</style>
+</helmet>
+<div class="r" style="width: 390px; height: 844px; position: relative; overflow: hidden">
+<div aria-hidden="true" style="position: absolute; inset: 0; opacity: 0.35">
+<div style="height: 64px; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; background: #1a1f1c; border-bottom: 1px solid #2a312c"><span style="font-size: 20px; line-height: 25px; font-weight: 700">VectorBridge</span><span style="height: 44px; display: flex; align-items: center; padding: 0 12px; border: 1px solid #2a312c; border-radius: 8px; font-size: 15px; font-weight: 600">72%</span></div>
+<div style="margin: 12px 16px; height: 133px; background: #1a1f1c; border: 1px solid #2a312c; border-radius: 12px; padding: 14px; font-size: 34px; line-height: 41px; font-weight: 700; color: #3fbf4f">Ready</div>
+</div>
+<div aria-hidden="true" style="position: absolute; inset: 0; background: rgba(0,0,0,0.7)"></div>
+<section role="alertdialog" aria-modal="true" aria-labelledby="s313bh" aria-describedby="s313bd" style="position: absolute; left: 16px; right: 16px; top: 110px; background: #1a1f1c; border: 2px solid #f5c518; border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 12px">
+<div style="display: flex; align-items: center; gap: 10px; color: #f5c518"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="width: 30px; height: 30px; stroke-width: 2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg><h2 id="s313bh" tabindex="-1" style="margin: 0; font-size: 28px; line-height: 34px; font-weight: 700">Restart the bridge services?</h2></div>
+<p id="s313bd" style="margin: 0; font-size: 17px; line-height: 22px">The radio and audio services restart. The bridge itself stays up.</p>
+<div style="background: rgba(255,255,255,0.06); border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 6px"><div style="font-size: 15px; line-height: 20px; font-weight: 600">What happens next</div><ol style="margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; font-size: 15px; line-height: 20px"><li>Receive audio stops for about 10 s. Apps reconnect by themselves.</li><li>Any app that is transmitting is unkeyed first.</li><li>Transmit locks again until you answer the antenna question.</li><li>The RAM log is kept; a fault report is saved to the card first.</li></ol></div>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px"><a href="Power-Sheet.dc.html" style="min-height: 48px; display: flex; align-items: center; justify-content: center; gap: 4px; background: rgba(14,18,16,0.6); border: 1px solid #2a312c; border-radius: 8px; color: #ffffff; font-size: 15px; line-height: 20px; text-decoration: none; padding: 0 12px; ">Cancel</a><a href="Power-Sheet.dc.html" style="min-height: 48px; display: flex; align-items: center; justify-content: center; background: #3fbf4f; border: 0; border-radius: 8px; color: #0e1210; font-size: 17px; line-height: 22px; font-weight: 600; text-decoration: none; ">Restart Services</a></div>
+</section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

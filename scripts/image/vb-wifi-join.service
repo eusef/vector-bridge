@@ -1,0 +1,10 @@
+[Unit]
+Description=VectorBridge: join another Wi-Fi, come back to the access point, or remember a new network
+After=NetworkManager.service persist.mount vb-firstboot.service vb-ap-apply.service
+
+[Service]
+Type=oneshot
+# Let the web UI's reply reach the phone before the radio moves.
+ExecStartPre=/bin/sleep 3
+ExecStart=/opt/vector-bridge/venv/bin/python -m vector_bridge.wifijoin apply
+StandardOutput=journal+console

@@ -1,0 +1,11 @@
+[Unit]
+Description=VectorBridge: a request to join another Wi-Fi (or come back to the access point) is waiting
+After=persist.mount
+
+[Path]
+# Written by the web UI (vector_bridge.wifijoin). Also checked at boot, which is how a new
+# network gets remembered on the writable boot after a field-mode request.
+PathExists=/persist/vector-bridge/wifi-join.json
+
+[Install]
+WantedBy=multi-user.target

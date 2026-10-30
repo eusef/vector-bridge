@@ -1,0 +1,19 @@
+[Unit]
+Description=VectorBridge KX2 network audio bridge
+After=network.target sound.target
+Wants=network.target
+
+[Service]
+Type=simple
+User=vector-bridge
+Group=audio
+ExecStart=/opt/vector-bridge/venv/bin/vector-bridge serve --audio alsa
+Restart=always
+RestartSec=2
+Nice=-10
+Environment=PYTHONUNBUFFERED=1
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

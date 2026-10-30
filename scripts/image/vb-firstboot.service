@@ -1,0 +1,17 @@
+[Unit]
+Description=VectorBridge first boot: per-device keys and an open access point
+# Armed only on a card prepared by scripts/image/prepare-golden.sh.
+ConditionPathExists=/etc/vector-bridge-firstboot
+# The access point is made through NetworkManager; persist.mount is what gets grown.
+After=NetworkManager.service persist.mount
+Wants=NetworkManager.service
+# sshd needs the new host keys; the web UI must see the open-AP marker from its first request.
+Before=ssh.service vector-bridge.service vector-bridge-tuner.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/vb-firstboot
+StandardOutput=journal+console
+
+[Install]
+WantedBy=multi-user.target

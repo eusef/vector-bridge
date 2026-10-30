@@ -1,0 +1,12 @@
+[Unit]
+Description=VectorBridge: put back the saved SSH setting and login password at boot
+# Field mode's overlay forgets both; the setting lives on /persist (vector_bridge.sshswitch).
+After=persist.mount vb-firstboot.service
+
+[Service]
+Type=oneshot
+ExecStart=/opt/vector-bridge/venv/bin/python -m vector_bridge.sshswitch boot
+StandardOutput=journal+console
+
+[Install]
+WantedBy=multi-user.target

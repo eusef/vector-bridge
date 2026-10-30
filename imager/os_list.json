@@ -1,0 +1,19 @@
+{
+  "os_list": [
+    {
+      "name": "VectorBridge 0.2.2",
+      "description": "Radio bridge for a Raspberry Pi Zero 2 W: digital-mode audio and rig control over Wi-Fi for VectorComm, WSJT-X and JS8Call. Pi Zero 2 W only.",
+      "icon": "https://github.com/eusef/vector-bridge/releases/download/v0.2.2/vector-bridge-icon.png",
+      "url": "https://github.com/eusef/vector-bridge/releases/download/v0.2.2/vector-bridge-0.2.2.img.xz",
+      "extract_size": 9358574080,
+      "extract_sha256": "196ce03c9c69c8028137a6f1151d147a861a11a43804999a6ce735932b0e873c",
+      "image_download_size": 603523444,
+      "image_download_sha256": "c33ba44b117a8938f790ceb16bccca7a22de10386b5347ae9f9b02ed30b53803",
+      "release_date": "2026-10-30",
+      "init_format": "none",
+      "devices": [
+        "pi3-64bit"
+      ]
+    }
+  ]
+}

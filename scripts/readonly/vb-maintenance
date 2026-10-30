@@ -1,0 +1,108 @@
+#!/usr/bin/env bash
+# Maintenance mode for the read-only bridge. Only path that writes to boot or root.
+#
+#   vb-maintenance status            field | maintenance, plus mount state
+#   vb-maintenance enter             root+boot writable on next boot, then reboots
+#   vb-maintenance apply [dir]       run the installer (updates); copy *.toml from dir into presets
+#   vb-maintenance exit              verify, back to read-only, reboot
+#
+# Refused while in field operation: a phone or tablet is on the access point, or the
+# bridge has a live client. Maintenance is a bench activity, by design.
+set -euo pipefail
+PATH=$PATH:/usr/sbin:/sbin      # iw and raspi-config's helpers live there; a login user's PATH omits it
+MOUNT=${VECTOR_BRIDGE_PERSIST:-/persist}
+FLAG=$MOUNT/vector-bridge/maintenance
+# Every Wi-Fi radio: the access point may be on a USB adapter (vector_bridge.wifiradio). WLAN= picks one.
+WLANS=${WLAN:-$(for w in /sys/class/net/*/wireless; do [ -d "$w" ] || continue; basename "$(dirname "$w")"; done)}
+SUDO=""; [ "$(id -u)" -eq 0 ] || SUDO="sudo"
+
+overlay_on() { findmnt -no FSTYPE / | grep -q overlay; }
+mode() { if overlay_on; then echo field; else echo maintenance; fi; }
+
+in_field_use() {
+  local stations peers
+  # Fail closed: if we cannot ask the radio who is connected, assume someone is.
+  command -v iw >/dev/null || { echo "cannot check for connected clients (iw missing)" >&2; return 0; }
+  # Only an access point has clients; joined to a network, the one "station" is the router.
+  stations=0
+  for dev in $WLANS; do
+    if $SUDO iw dev "$dev" info 2>/dev/null | grep -q 'type AP'; then
+      stations=$((stations + $($SUDO iw dev "$dev" station dump 2>/dev/null | grep -c '^Station' || true)))
+    fi
+  done
+  # Ask the bridge over its own UDP control channel; "peer" is null when nobody is streaming.
+  peers=$(/opt/vector-bridge/venv/bin/python - <<'PY' 2>/dev/null || echo 0
+import json, socket
+from vector_bridge.protocol import DEFAULT_CONTROL_PORT
+s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM); s.settimeout(1)
+s.sendto(b'{"cmd":"status"}', ("127.0.0.1", DEFAULT_CONTROL_PORT))
+print(1 if json.loads(s.recv(4096)).get("peer") else 0)
+PY
+)
+  [ "${stations:-0}" -gt 0 ] || [ "${peers:-0}" -gt 0 ]
+}
+
+case "${1:-status}" in
+  status)
+    echo "mode: $(mode)"
+    echo "root: $(findmnt -no FSTYPE,OPTIONS / | cut -c1-60)"
+    echo "boot: $(findmnt -no OPTIONS /boot/firmware | cut -d, -f1)"
+    echo "persist: $(findmnt -no OPTIONS "$MOUNT" 2>/dev/null | cut -d, -f1 || echo 'not mounted')"
+    ;;
+  enter)
+    if in_field_use; then
+      echo "refused: a client is connected (access point station or bridge peer). Maintenance is for the bench." >&2
+      exit 3
+    fi
+    if [ "$(mode)" = maintenance ]; then echo "already in maintenance mode"; exit 0; fi
+    $SUDO mount -o remount,rw "$MOUNT"
+    $SUDO touch "$FLAG"; $SUDO mount -o remount,ro "$MOUNT"
+    $SUDO raspi-config nonint disable_overlayfs
+    echo "rebooting into maintenance mode"
+    $SUDO reboot
+    ;;
+  apply)
+    [ "$(mode)" = maintenance ] || { echo "refused: root is read-only. Run 'vb-maintenance enter' first." >&2; exit 3; }
+    [ -f "$FLAG" ] || { echo "refused: maintenance was not entered through vb-maintenance." >&2; exit 3; }
+    # The checkout is the invoking user's ~/vector-bridge (tools/deploy.sh puts it there), or VB_REPO.
+    OWNER_HOME=$(getent passwd "${SUDO_USER:-$USER}" | cut -d: -f6)
+    REPO=${VB_REPO:-$OWNER_HOME/vector-bridge}
+    [ -f "$REPO/scripts/install.sh" ] || { echo "no checkout at $REPO (set VB_REPO)" >&2; exit 1; }
+    # Here, not in enter: raspi-config refuses to touch fstab while the overlay is active.
+    # It only edits fstab, so remount the live /boot too (kernel and firmware updates land there).
+    $SUDO raspi-config nonint disable_bootro
+    $SUDO mount -o remount,rw /boot/firmware
+    $SUDO bash "$REPO/scripts/install.sh"
+    if [ -n "${2:-}" ]; then
+      # Same atomic path the service uses: temp file, fsync, rename, remount ro.
+      $SUDO env VECTOR_BRIDGE_PERSIST="$MOUNT" /opt/vector-bridge/venv/bin/python - "$2" "$MOUNT/vector-bridge/presets" <<'PY'
+import sys, tomllib
+from pathlib import Path
+from vector_bridge import persist, profiles
+src, dst = Path(sys.argv[1]), Path(sys.argv[2])
+for f in sorted(src.glob("*.toml")):
+    data = tomllib.loads(f.read_text()); data.setdefault("name", f.stem); data.setdefault("display_name", data["name"])
+    profiles._from_dict(data, builtin=False)          # reject a bad preset before it lands on the card
+    persist.save(dst / f.name, f.read_text(), mode=0o664)
+    print("installed preset", f.name)
+PY
+    fi
+    echo "applied. Verify, then 'vb-maintenance exit'."
+    ;;
+  exit)
+    if [ "$(mode)" != maintenance ]; then echo "already in field mode"; exit 0; fi
+    echo "verifying before locking down"
+    /opt/vector-bridge/venv/bin/vector-bridge --help >/dev/null
+    systemctl is-enabled vector-bridge vector-bridge-tuner >/dev/null
+    # Every preset on the card must parse, or the field boot would start with a broken profile.
+    VECTOR_BRIDGE_PRESETS="$MOUNT/vector-bridge/presets" /opt/vector-bridge/venv/bin/python -c \
+      "from vector_bridge import profiles; print(len(profiles.load_all()), 'profiles ok')"
+    $SUDO mount -o remount,rw "$MOUNT"; $SUDO rm -f "$FLAG"; $SUDO mount -o remount,ro "$MOUNT"
+    # enable_bootro appends ",ro" every time it runs, so only call it when fstab lacks it.
+    [ "$(raspi-config nonint get_bootro_conf)" -eq 0 ] || $SUDO raspi-config nonint enable_bootro
+    $SUDO raspi-config nonint enable_overlayfs
+    echo "rebooting into field mode (read-only)"
+    $SUDO reboot
+    ;;
+  *) echo "usage: vb-maintenance status|enter|apply [preset-dir]|exit" >&2; exit 1 ;;
+esac

@@ -1,0 +1,15 @@
+#!/bin/sh
+# Install the one wheel in ~vectorbridge/vb-deploy into the bridge venv. Bench cards only:
+# setup-agent-deploy.sh installs this root-owned and lets the vectorbridge login run it with
+# no password, so tools/deploy_pi.sh can deploy with nobody at the keyboard.
+set -eu
+DIR=/home/vectorbridge/vb-deploy
+FLAG=/persist/vector-bridge/maintenance
+if findmnt -no FSTYPE / | grep -q overlay; then
+  echo "refused: field mode (root is an overlay); enter maintenance first" >&2; exit 3
+fi
+[ -f "$FLAG" ] || { echo "refused: maintenance was not entered through vb-maintenance or vb-agent-enter" >&2; exit 3; }
+set -- "$DIR"/vector_bridge-*-py3-none-any.whl
+if [ $# -ne 1 ] || [ ! -f "$1" ]; then echo "refused: need exactly one wheel in $DIR" >&2; exit 1; fi
+/opt/vector-bridge/venv/bin/pip install -q --no-index --no-deps --force-reinstall "$1"
+echo "installed $(basename "$1")"

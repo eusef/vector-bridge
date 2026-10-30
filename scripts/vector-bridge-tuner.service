@@ -1,0 +1,43 @@
+[Unit]
+Description=VectorBridge browser level tuner
+# After, not Requires: if the bridge is down the tuner should still come up and say so.
+After=network.target vector-bridge.service
+Wants=network.target
+
+[Service]
+Type=simple
+User=vector-bridge
+Group=audio
+# Reads its own two units' journal for the support bundle (support.py filters to them).
+SupplementaryGroups=systemd-journal
+ExecStart=/opt/vector-bridge/venv/bin/vector-bridge tuner --bind 0.0.0.0 --http-port 80
+Restart=always
+RestartSec=2
+# SIGTERM the tuner only: it unkeys through rigctld, then stops it. control-group would signal
+# rigctld at the same moment and leave the rig keyed (review 2B, Pi bench 2026-09-24).
+# Anything still running after the stop gets SIGKILL.
+KillMode=mixed
+Environment=PYTHONUNBUFFERED=1
+# Status light: the Pi's own ACT LED. 99-vector-bridge-led.rules frees it from its
+# kernel trigger and makes it writable by this user. See DOCS/alerts.md.
+Environment=VECTOR_BRIDGE_LED=/sys/class/leds/ACT/brightness
+StandardOutput=journal
+StandardError=journal
+# Port 80 is privileged and this runs as a system user, so grant just that one
+# capability rather than running as root.
+AmbientCapabilities=CAP_NET_BIND_SERVICE
+# Saves (wizard state, kits, alerts, ladder record, admin PIN, app tokens) remount /persist
+# rw for the seconds they take, through the same two sudo rules the audio service uses
+# (setup-readonly-root.sh: exactly "mount -o remount,rw|ro /persist"). Until roadmap 1.4 this
+# unit held CAP_SYS_ADMIN for that, which is root in all but name for a process on the LAN.
+# sudo needs NoNewPrivileges off, so it is not set, nor are RestrictSUIDSGID (it implies
+# NoNewPrivileges) or a CapabilityBoundingSet (sudo's root would have none of its own).
+# Serves pages on the LAN (writes need the admin PIN, reads do not), so give it no more than it needs.
+# Gain changes go to the bridge service, which owns the config.
+PrivateTmp=yes
+ProtectHome=yes
+ProtectSystem=full
+ProtectControlGroups=yes
+
+[Install]
+WantedBy=multi-user.target

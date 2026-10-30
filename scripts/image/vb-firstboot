@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+# First boot of a card burned from the golden image: make this bridge its own device. Runs
+# once, as root, on a writable root (the image is captured in maintenance mode because a
+# write under the overlay would be lost at the next reboot).
+#
+#   1. new SSH host keys and machine-id
+#   2. OPEN access point named from this Pi's serial, plus the marker that limits the web
+#      UI to the Wi-Fi page and blocks transmit (vector_bridge.apsetup)
+#   3. grow the persist partition to the end of the card (the image ships it shrunk)
+#
+# The card stays writable. When the owner sets a name and passphrase on the Wi-Fi page,
+# vb-ap-apply stores them and locks the card down into field mode.
+#
+# scripts/image/prepare-golden.sh deletes the golden card's keys and AP profile before
+# capture, so a failure here leaves a bridge with no AP rather than one with shared secrets.
+# The flag stays in place on failure and the next boot tries again.
+set -euo pipefail
+PATH=$PATH:/usr/sbin:/sbin
+FLAG=${VB_FIRSTBOOT_FLAG:-/etc/vector-bridge-firstboot}
+ETC=${VB_FIRSTBOOT_ETC:-/etc}
+MOUNT=${VECTOR_BRIDGE_PERSIST:-/persist}
+PY=${VB_FIRSTBOOT_PYTHON:-/opt/vector-bridge/venv/bin/python}
+
+[ -e "$FLAG" ] || { echo "vb-firstboot: not armed, nothing to do"; exit 0; }
+if findmnt -no FSTYPE / | grep -q overlay; then
+  echo "vb-firstboot: root overlay is active, writes would not survive. Capture the image in maintenance mode." >&2
+  exit 3
+fi
+
+echo "vb-firstboot: SSH host keys"
+rm -f "$ETC"/ssh/ssh_host_*
+ssh-keygen -A
+
+echo "vb-firstboot: machine-id"
+rm -f "$ETC/machine-id"
+# On Debian this is a symlink to /etc/machine-id and must stay; only a stale real copy goes.
+DBUS_ID=${VB_FIRSTBOOT_DBUS_ID:-/var/lib/dbus/machine-id}
+[ -L "$DBUS_ID" ] || rm -f "$DBUS_ID"
+systemd-machine-id-setup
+
+grow_persist() {
+  # Called on the left of ||, where set -e is off, so every step checks itself.
+  local part disk num rc=0
+  part=$(findmnt -no SOURCE "$MOUNT") || return 1
+  disk=/dev/$(lsblk -no PKNAME "$part") || return 1
+  num=${part##*[!0-9]}
+  # Same in-place form the card-shrink recipe proved (DOCS/archive/bringup-log.md, P2).
+  echo ", +" | sfdisk --no-reread --force -N "$num" "$disk" || return 1
+  partx -u "$disk" || return 1
+  mount -o remount,rw "$MOUNT" || return 1
+  resize2fs "$part" || rc=1
+  mount -o remount,ro "$MOUNT" || rc=1
+  return $rc
+}
+echo "vb-firstboot: persist partition"
+grow_persist || echo "vb-firstboot: could not grow $MOUNT, continuing with the shipped size" >&2
+
+echo "vb-firstboot: open access point"
+"$PY" -m vector_bridge.apsetup first-boot-open
+
+# Disarm last: any failure above leaves the flag, and the next boot tries again.
+rm -f "$FLAG"
+echo "vb-firstboot: done. Waiting for the owner to set the Wi-Fi name and passphrase."

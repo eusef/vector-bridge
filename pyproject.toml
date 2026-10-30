@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=77"]  # 77: the SPDX license expression below (PEP 639)
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vector-bridge"
+version = "0.2.2"
+description = "VectorBridge: Raspberry Pi Zero 2 W that presents an HF radio to a tablet or computer as a network sound card over Wi-Fi"
+license = "GPL-3.0-or-later"
+license-files = ["LICENSE", "THIRD-PARTY-NOTICES.md"]
+requires-python = ">=3.11"
+dependencies = ["numpy>=1.24"]
+
+[project.optional-dependencies]
+pi = ["pyalsaaudio>=0.10"]
+dev = ["pytest>=8"]
+
+[project.scripts]
+vector-bridge = "vector_bridge.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["admin_pin: runs the real admin PIN check instead of a held session"]

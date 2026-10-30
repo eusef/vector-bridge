@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+# The HDMI console (tty1): a menu for an operator with a monitor and keyboard (roadmap 1.1, 1.5).
+# agetty runs this as root in place of login (vb-console.conf). Physical access counts as full
+# trust (maintainer, 2026-10-04), so "Command line" logs in the card's own user with no password.
+# Leaving the menu or the shell restarts it.
+set -u
+VB=/usr/local/bin/vector-bridge
+USER1000=$(getent passwd 1000 | cut -d: -f1)
+
+pause() { read -r -p "Press Enter to go back to the menu. " _; }
+
+while true; do
+  clear
+  echo "VectorBridge console"
+  echo
+  echo "  1  Reset the admin PIN"
+  echo "  2  Show the bridge Wi-Fi name and passphrase"
+  echo "  3  Command line"
+  echo "  4  Turn SSH on or off"
+  echo
+  read -r -p "Type 1, 2, 3 or 4 and press Enter: " choice || exit 0
+  case "$choice" in
+    1)
+      read -r -p "Forget the admin PIN? The next save on the web page asks for a new one, and apps must log in again. Type yes: " ok
+      if [ "$ok" = yes ]; then "$VB" pin reset; else echo "Nothing changed."; fi
+      pause ;;
+    2)
+      "$VB" ap show
+      pause ;;
+    3)
+      if [ -n "$USER1000" ]; then exec /bin/login -f "$USER1000"; else exec /bin/login; fi ;;
+    4)
+      # On always sets a new login password: a fresh image has none (R-D4).
+      if "$VB" ssh status | grep -q ': on'; then
+        read -r -p "SSH is on. Turn it off? Type yes: " ok
+        if [ "$ok" = yes ]; then "$VB" ssh off; else echo "Nothing changed."; fi
+      else
+        read -r -p "SSH is off. Turn it on with a new password for $USER1000? Type yes: " ok
+        if [ "$ok" = yes ]; then "$VB" ssh on; else echo "Nothing changed."; fi
+      fi
+      pause ;;
+  esac
+done

@@ -1,0 +1,4 @@
+# VectorBridge status light: hand the Pi's ACT LED to the tuner service.
+# The kernel trigger is turned off so only the bridge drives the LED, and the
+# brightness file is given to the vector-bridge user the tuner runs as.
+SUBSYSTEM=="leds", KERNEL=="ACT", ACTION=="add|change", RUN+="/bin/sh -c 'echo none > /sys/class/leds/ACT/trigger; chown vector-bridge /sys/class/leds/ACT/brightness'"

@@ -1,0 +1,40 @@
+# VectorBridge configuration
+
+# Name reported to clients in the hello reply.
+device_name = "VectorBridge"
+
+# UDP port for audio packets.
+audio_port = 5100
+
+# UDP port for JSON control requests.
+control_port = 5101
+
+# USB vendor id (hex) of the sound card; empty picks the first USB audio card.
+usb_vendor_id = ""
+
+# USB product id (hex) of the sound card.
+usb_product_id = ""
+
+# USB position of the sound card (e.g. 1-1.2), set by setup to tell identical cards apart; empty = by id.
+audio_usb_path = ""
+
+# true when the sound card had an identical twin when chosen: only the card at audio_usb_path is used. false: a card with the same id in another socket is used too.
+audio_usb_strict = false
+
+# Playback (to KX2 mic) mixer level, 0-100. Starts low on purpose; raise during calibration.
+tx_gain = 20
+
+# Capture (from KX2 phones) mixer level, 0-100.
+rx_gain = 50
+
+# TX jitter buffer priming depth in milliseconds. 100 rides out the 100 to 130 ms stalls seen on Pi Zero 2 W Wi-Fi; 30 was measured to underrun.
+jitter_target_ms = 100
+
+# TX jitter buffer maximum depth before old audio is dropped.
+jitter_max_ms = 400
+
+# Who can reach port 4532, where WSJT-X, JS8Call or any Hamlib NET rigctl app tunes the radio and keys it through the bridge's safety proxy (keying passes the transmit checks, the transmit lock and the Transmit Time Limit as a key cap; a client that disconnects is unkeyed). "off": only programs on the Pi. "ap": also devices on the bridge's own Wi-Fi. "wifi": devices on whichever Wi-Fi the Pi is on, its own or a joined one, following a switch; never the tailnet. "all": every network the Pi is on; a client over the tailnet must first send "\vb_auth <app token>" (VectorCable does it for WSJT-X and JS8Call). Settable live under Radio, Advanced.
+rigctl_access = "wifi"
+
+# Seconds of transmit audio without a 1 s pause before the bridge mutes it, 0 to 600; 0 turns the limit off. The same number caps how long a desktop app may hold a key through port 4532. A VOX rig keys on the audio, so this is its only time limit. 120 fits FT8, FT4, every JS8 speed, JT65 and JT9 (about 50 s) and WSPR (about 110 s); long fldigi messages may need more. Settable from the home page's Transmit Time Limit sheet.
+tx_audio_cap_s = 120

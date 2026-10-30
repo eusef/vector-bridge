@@ -1,0 +1,10 @@
+[Unit]
+Description=VectorBridge: a request to turn SSH on or off is waiting
+After=persist.mount
+
+[Path]
+# Written by the Wi-Fi page (vector_bridge.sshswitch), behind the admin PIN. Also checked at boot.
+PathExists=/persist/vector-bridge/ssh-request.json
+
+[Install]
+WantedBy=multi-user.target

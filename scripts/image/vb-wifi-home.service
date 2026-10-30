@@ -1,0 +1,17 @@
+[Unit]
+Description=VectorBridge: rejoin the home Wi-Fi network at boot, if one is marked and in range
+# network-online: NetworkManager has finished its boot autoconnect, so the access point is up.
+After=network-online.target persist.mount vb-firstboot.service vb-ap-apply.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+# Scans (about 20 s) plus a join; a stuck one is killed and NetworkManager brings the access point back.
+TimeoutStartSec=180
+# Let the access point settle before the scan.
+ExecStartPre=/bin/sleep 3
+ExecStart=/opt/vector-bridge/venv/bin/python -m vector_bridge.wifijoin boot
+StandardOutput=journal+console
+
+[Install]
+WantedBy=multi-user.target

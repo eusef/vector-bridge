@@ -1,0 +1,8 @@
+[Unit]
+Description=VectorBridge: turn SSH on (with a new login password) or off
+After=persist.mount vb-firstboot.service vb-ssh-boot.service
+
+[Service]
+Type=oneshot
+ExecStart=/opt/vector-bridge/venv/bin/python -m vector_bridge.sshswitch apply
+StandardOutput=journal+console
