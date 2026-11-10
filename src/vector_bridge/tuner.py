@@ -47,6 +47,7 @@ from . import ladder as ladder_mod
 from .alerts_page import ALERTS
 from .cat import CatError, RigctldClient, RigctldSupervisor
 from .home_page import HOME
+from .log import log
 from .manage import control_request
 from .tx import PttController
 
@@ -380,7 +381,19 @@ class _Handler(BaseHTTPRequestHandler):
     def log_message(self, fmt, *args) -> None:
         """Silence per-request logging; at 10 Hz polling it would bury the journal."""
 
+    def _log_join(self, code: int, payload: dict) -> None:
+        """One line per Wi-Fi switch request (POST /api/join), refused ones too: a join refused for a PIN,
+        a foreign Host or a bad body otherwise leaves no trace, and the operator only sees "it took a few
+        tries". No network name or passphrase: the support bundle carries this journal."""
+        errors = payload.get("errors")
+        err = payload.get("error") or (" ".join(str(e) for e in errors) if isinstance(errors, list) else "")
+        action = payload.get("action") or self._join_action  # a refused body's own action, once it is read
+        log("wifi_request", "INFO" if code == 200 else "WARN", status=code, action=action,
+            error=str(err)[:120], peer=self.client_address[0], host=(self.headers.get("Host") or "")[:64])
+
     def _send(self, code: int, payload, ctype: str = "application/json", cookie: str | None = None) -> None:
+        if self.command == "POST" and self.path == "/api/join" and isinstance(payload, dict):
+            self._log_join(code, payload)
         body = payload if isinstance(payload, bytes) else json.dumps(payload).encode()
         if ctype.startswith("text/html"):
             body = admin_page.inject(body)  # every page can then ask for the PIN when a save is refused
@@ -522,6 +535,7 @@ class _Handler(BaseHTTPRequestHandler):
                 or self.headers.get("Sec-Fetch-Site", "").strip().lower() == "cross-site")
 
     def do_POST(self) -> None:
+        self._join_action = ""  # one handler serves every request on a kept-alive connection
         if self._cross_site():
             self.close_connection = True  # the unread body must not become the next request
             self._send(403, {"ok": False, "error": "forbidden_origin"})
@@ -584,6 +598,8 @@ class _Handler(BaseHTTPRequestHandler):
             self._send(*wificountry.handle(body))
             return
         if self.path == "/api/join":
+            act = body.get("action")
+            self._join_action = act if act in (*wifijoin.ACTIONS, "home") else ""  # only a known word reaches the log
             self._send(*wifijoin.handle(body))
             return
         if self.path == "/api/ssh":

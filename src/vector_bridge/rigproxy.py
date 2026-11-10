@@ -172,6 +172,10 @@ def ptt_reply(sep: str, value: str, code: int) -> bytes:
     return f"set_ptt: {value}{sep}{status}\n".encode()
 
 
+class _RigctldError(Exception):
+    """A write to rigctld failed: the session log names rigctld, not the client."""
+
+
 class Session:
     """One desktop client: its socket, its rigctld connection and its PTT state."""
 
@@ -337,7 +341,10 @@ class Session:
     def handle(self, raw: bytes) -> None:
         kind, sep, value = classify(raw.decode("latin-1"))
         if kind == "pass":
-            self.upstream.sendall(raw)
+            try:
+                self.upstream.sendall(raw)
+            except OSError as e:
+                raise _RigctldError(e) from e
         elif kind == "ptt":
             self.send(ptt_reply(sep, value, self.ptt(value != "0")))
         elif kind == "invalid":
@@ -356,10 +363,12 @@ class Session:
             self.close()
             return
         buf = b""
+        why = None
         try:
             while True:
                 data = self.client.recv(4096)
                 if not data:
+                    why = "the client closed its connection"
                     break
                 buf += data
                 while b"\n" in buf:
@@ -378,29 +387,40 @@ class Session:
                     if not self.authed:
                         self._refuse_quietly()
                     break
-        except OSError:
-            pass
+        except _RigctldError as e:
+            why = f"rigctld socket error: {e}"
+        except OSError as e:
+            why = f"client socket error: {e}"
         finally:
-            self.close()
+            self.close(why)
 
     def _pump_up(self) -> None:
         """rigctld to client, unchanged."""
+        why = None
         try:
             while True:
-                data = self.upstream.recv(4096)
-                if not data:
+                try:
+                    data = self.upstream.recv(4096)
+                except OSError as e:
+                    why = f"rigctld socket error: {e}"
                     break
-                self.send(data)
-        except OSError:
-            pass
+                if not data:
+                    why = "rigctld closed its connection"
+                    break
+                self.send(data)  # an OSError here is the client's socket
+        except OSError as e:
+            why = f"client socket error: {e}"
         finally:
-            self.close()
+            self.close(why)
 
-    def close(self) -> None:
+    def close(self, why: str | None = None) -> None:
+        """why: logged once, for the end of a session that was in use (a refused login already logged its reason)."""
         with self._mu:
             if self._closed:
                 return
             self._closed = True
+            if why and self.authed:
+                log.warning("%s: closed, %s%s", self.owner, why, " (it was keyed)" if self.keyed else "")
             if self.keyed:
                 self._unkey("client disconnected")
             socks = [x for x in (self.client, self.upstream) if x is not None]

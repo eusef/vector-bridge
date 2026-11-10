@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "vector-bridge"
-version = "0.2.2"
-description = "VectorBridge: Raspberry Pi Zero 2 W that presents an HF radio to a tablet or computer as a network sound card over Wi-Fi"
+version = "0.2.3"
+description = "VectorBridge: Raspberry Pi (Zero 2 W, 3, 4 or 5) that presents an HF radio to a tablet or computer as a network sound card over Wi-Fi"
 license = "GPL-3.0-or-later"
 license-files = ["LICENSE", "THIRD-PARTY-NOTICES.md"]
 requires-python = ">=3.11"

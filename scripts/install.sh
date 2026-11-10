@@ -203,6 +203,12 @@ install -m 644 "$REPO/scripts/image/vb-wifi-home.service" /etc/systemd/system/vb
 install -m 644 "$REPO/scripts/image/vb-ssh-apply.path" /etc/systemd/system/vb-ssh-apply.path
 install -m 644 "$REPO/scripts/image/vb-ssh-apply.service" /etc/systemd/system/vb-ssh-apply.service
 install -m 644 "$REPO/scripts/image/vb-ssh-boot.service" /etc/systemd/system/vb-ssh-boot.service
+# The login's SSH keys: saved to /persist when they change, put back by vb-ssh-boot (roadmap 4.11).
+home1000=$(getent passwd 1000 | cut -d: -f6)
+case "$home1000" in /*) ;; *) echo "install.sh: no home for uid 1000" >&2; exit 1 ;; esac
+sed "s|@HOME@|$home1000|" "$REPO/scripts/image/vb-ssh-keys.path" > /etc/systemd/system/vb-ssh-keys.path
+chmod 644 /etc/systemd/system/vb-ssh-keys.path
+install -m 644 "$REPO/scripts/image/vb-ssh-keys.service" /etc/systemd/system/vb-ssh-keys.service
 # A USB Wi-Fi adapter in any port takes over the bridge's network; unplugged, the built-in radio does.
 install -m 644 "$REPO/scripts/image/vb-wifi-radio.service" /etc/systemd/system/vb-wifi-radio.service
 # Status light: the rule runs again at every boot; the trigger applies it now.
@@ -216,6 +222,7 @@ systemctl enable --now vb-wifi-join.path >/dev/null 2>&1
 systemctl enable vb-wifi-home.service >/dev/null 2>&1
 systemctl enable --now vb-ssh-apply.path >/dev/null 2>&1
 systemctl enable vb-ssh-boot.service >/dev/null 2>&1
+systemctl enable --now vb-ssh-keys.path >/dev/null 2>&1
 # Not --now: moving the network mid-install would drop a Wi-Fi SSH session. It starts at the next boot.
 systemctl enable vb-wifi-radio.service >/dev/null 2>&1
 systemctl enable --now avahi-daemon.service >/dev/null 2>&1

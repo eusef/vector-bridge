@@ -1,6 +1,8 @@
 """SSH on or off (R-D4): the password check, the request the web side leaves (a hash, never the
 password), the root side for on, off and a bad request, the boot re-apply, and the routes."""
 import json
+import os
+import pwd
 import shutil
 import threading
 
@@ -139,6 +141,128 @@ def test_boot_refuses_a_bad_state(root_side):
     sshswitch.STATE.write_text(json.dumps({"action": "on", "hash": "nope"}))
     assert sshswitch.boot() == 1 and root_side == []
 
+
+
+# ---- SSH keys (roadmap 4.11) ---------------------------------------------------------------
+
+
+@pytest.fixture
+def keys(tmp_path, monkeypatch):
+    """save_keys() and restore_keys() with the login's home and KEYS under tmp_path."""
+    home = tmp_path / "home"
+    home.mkdir()
+    user = pwd.struct_passwd(("vectorbridge", "x", os.getuid(), os.getgid(), "", str(home), "/bin/bash"))
+    monkeypatch.setattr(sshswitch, "_login", lambda: user)
+    monkeypatch.setattr(sshswitch, "KEYS", tmp_path / "persist" / "ssh" / "authorized_keys")
+    monkeypatch.setattr(sshswitch, "STATE", tmp_path / "persist" / "ssh.json")
+    sshswitch.KEYS.parent.parent.mkdir()
+    monkeypatch.setattr(sshswitch.time, "sleep", lambda s: None)
+    saves = []
+    real_write = sshswitch.persist.atomic_write
+    monkeypatch.setattr(sshswitch.persist, "atomic_write", lambda p, d, **k: saves.append(p) or real_write(p, d, **k))
+    return home / ".ssh" / "authorized_keys", saves
+
+
+def saved_keys(text, dir_mode=0o700):
+    sshswitch.KEYS.parent.mkdir(mode=dir_mode)
+    sshswitch.KEYS.parent.chmod(dir_mode)
+    sshswitch.KEYS.write_text(text)
+    sshswitch.KEYS.chmod(0o600)
+
+
+def add_key(path, text, mode=0o600):
+    path.parent.mkdir(mode=0o700, exist_ok=True)
+    path.write_text(text)
+    path.chmod(mode)
+
+
+def test_a_changed_key_file_is_saved_and_an_unchanged_one_is_not(keys):
+    path, saves = keys
+    add_key(path, "ssh-ed25519 AAAA mac\n")
+    assert sshswitch.save_keys() == 0
+    assert sshswitch.KEYS.read_text() == "ssh-ed25519 AAAA mac\n"
+    assert sshswitch.KEYS.stat().st_mode & 0o777 == 0o600
+    assert sshswitch.KEYS.parent.stat().st_mode & 0o777 == 0o700          # root only: not the web user's
+    assert sshswitch.save_keys() == 0 and len(saves) == 1     # the same keys: /persist untouched
+    add_key(path, "ssh-ed25519 AAAA mac\nssh-ed25519 BBBB laptop\n")
+    assert sshswitch.save_keys() == 0 and len(saves) == 2
+    assert "laptop" in sshswitch.KEYS.read_text()
+
+
+def test_a_key_added_while_a_save_runs_is_saved_too(keys, monkeypatch):
+    path, saves = keys
+    add_key(path, "ssh-ed25519 AAAA mac\n")
+    second = iter(["ssh-ed25519 AAAA mac\nssh-ed25519 BBBB laptop\n"])
+    monkeypatch.setattr(sshswitch.time, "sleep", lambda s: add_key(path, next(second, path.read_text())))
+    assert sshswitch.save_keys() == 0
+    assert "laptop" in sshswitch.KEYS.read_text() and len(saves) == 2
+
+
+def test_deleting_the_key_file_deletes_the_saved_copy(keys):
+    path, _ = keys
+    add_key(path, "ssh-ed25519 AAAA mac\n")
+    assert sshswitch.save_keys() == 0
+    path.unlink()
+    assert sshswitch.save_keys() == 0 and not sshswitch.KEYS.exists()
+    path.parent.rmdir()
+    assert sshswitch.save_keys() == 0 and not sshswitch.KEYS.exists()
+
+
+@pytest.mark.parametrize("bad", ["symlink", "dir_symlink", "fifo", "writable", "too_big"])
+def test_root_saves_nothing_it_should_not_read(keys, tmp_path, bad):
+    path, saves = keys
+    secret = tmp_path / "secret"
+    secret.write_text("not a key")
+    if bad == "symlink":
+        path.parent.mkdir(mode=0o700)
+        path.symlink_to(secret)
+    elif bad == "dir_symlink":
+        (tmp_path / "elsewhere").mkdir()
+        (tmp_path / "elsewhere" / "authorized_keys").write_text("not a key")
+        path.parent.symlink_to(tmp_path / "elsewhere")
+    elif bad == "fifo":
+        path.parent.mkdir(mode=0o700)
+        os.mkfifo(path)
+    elif bad == "writable":
+        add_key(path, "ssh-ed25519 AAAA mac\n", mode=0o666)
+    else:
+        add_key(path, "x" * (sshswitch.KEYS_MAX + 1))
+    assert sshswitch.save_keys() == 1
+    assert saves == [] and not sshswitch.KEYS.exists()
+
+
+def test_boot_puts_the_saved_keys_back(keys, root_side):
+    path, _ = keys
+    saved_keys("ssh-ed25519 AAAA mac\n")
+    assert sshswitch.boot() == 0                                   # no STATE: SSH left as it is
+    assert path.read_text() == "ssh-ed25519 AAAA mac\n" and root_side == []
+    assert path.stat().st_mode & 0o777 == 0o600 and path.parent.stat().st_mode & 0o777 == 0o700
+    assert path.stat().st_uid == os.getuid() and sorted(os.listdir(path.parent)) == ["authorized_keys"]
+    add_key(path, "ssh-ed25519 OLD stale\n")                     # overwritten, not appended
+    assert sshswitch.boot() == 0 and path.read_text() == "ssh-ed25519 AAAA mac\n"
+
+
+def test_boot_leaves_the_keys_alone_when_none_were_saved(keys, root_side):
+    path, _ = keys
+    add_key(path, "ssh-ed25519 AAAA installed-in-maintenance\n")
+    assert sshswitch.boot() == 0 and path.read_text() == "ssh-ed25519 AAAA installed-in-maintenance\n"
+
+
+def test_boot_refuses_saved_keys_root_did_not_write(keys, root_side, tmp_path):
+    path, _ = keys
+    planted = tmp_path / "planted"
+    planted.write_text("ssh-ed25519 EVIL web-user\n")
+    sshswitch.KEYS.parent.mkdir(mode=0o700)
+    sshswitch.KEYS.symlink_to(planted)
+    sshswitch.STATE.write_text(json.dumps({"action": "on", "hash": HASH}))
+    assert sshswitch.boot() == 1 and not path.exists()
+    assert root_side == [f"chpasswd -e <vectorbridge:{HASH}", "systemctl start ssh.service"]   # SSH still applied
+
+
+def test_boot_refuses_saved_keys_in_a_directory_others_can_open(keys, root_side):
+    path, _ = keys
+    saved_keys("ssh-ed25519 AAAA mac\n", dir_mode=0o755)
+    assert sshswitch.boot() == 1 and not path.exists()
 
 @pytest.fixture
 def server(tmp_path, monkeypatch):

@@ -8,7 +8,12 @@ first at boot (apsetup keeps it at autoconnect priority 100), so a reboot is the
 is the "Back to the access point" button. The one exception is a home network: one remembered
 network may be marked to rejoin at boot, and vb-wifi-home.service switches to it (see boot())
 only when it is in range. Away from home the access point stays up; on an adapter that cannot
-scan while it is the access point, it pauses once at boot for that scan.
+scan while it is the access point, it pauses once at boot for that scan. The same service then
+keeps watching (see home()): when the home network drops later (a router re-authentication that
+times out once made NetworkManager give up on the profile for good, 2026-10-30), it joins again
+as soon as the network is back in range, with a growing pause between tries. It never scans for
+that in the field: only a network that was joined since boot is rejoined, and "Back to the
+access point" turns the rejoin off until the next boot or the next join from the page.
 
 Three requests, all written by the unprivileged web process to the persist partition and run as
 root by vb-wifi-join.service when vb-wifi-join.path sees the file:
@@ -40,7 +45,13 @@ RESULT = persist.APP_DIR / "wifi-join-result.json"
 # The remembered network to rejoin at boot. Written by the web process; no root trip needed.
 HOME = persist.APP_DIR / "home-network.json"
 PATH_UNIT = "vb-wifi-join.path"
+# "Back to the access point" from the page: no rejoin until the next boot (/run is cleared) or
+# the next join from the page.
+AP_CHOSEN = Path("/run/vb-wifi-ap-chosen")
 ACTIONS = ("join", "up", "ap")
+# After the home network drops: the first try, then doubling up to the longest wait, in seconds.
+RETRY_FIRST_S, RETRY_MAX_S = 20, 300
+POLL_S = 5
 _PASS = apsetup._PASS
 
 
@@ -108,8 +119,12 @@ def home_network() -> str:
 def report() -> dict:
     dev = _device()
     con = dev.get("GENERAL.CONNECTION", "")
+    usb = wifiradio.is_usb(dev.get("device", ""))
     return {"ok": True, "on_ap": con == manage.AP_CON, "connection": con, "radio": wifiradio.label(dev.get("device", "")),
-            "radio_usb": wifiradio.is_usb(dev.get("device", "")),
+            "radio_usb": usb,
+            # A built-in radio with a usable 5 GHz channel (Pi 3B+, 4, 5 with a Wi-Fi country set) needs no
+            # USB adapter: the home page's adapter notice is for a 2.4 GHz only one (Zero 2 W).
+            "radio_5ghz": not usb and bool(wifiradio.built_in().channel5),
             "state": dev.get("GENERAL.STATE", ""), "ip": dev.get("IP4.ADDRESS[1]", "").split("/")[0],
             "saved": saved_networks(), "home": home_network(), "pending": PENDING.exists(), "result": last_result()}
 
@@ -186,6 +201,17 @@ def _connect(ssid: str, passphrase: str, radio: str) -> subprocess.CompletedProc
     return subprocess.run(manage._sudo(argv), input=passphrase + "\n", text=True, capture_output=True, check=False)
 
 
+def _ap_chosen(chosen: bool) -> None:
+    """Remember that the access point is up because the user asked (home() leaves it alone), or forget it."""
+    try:
+        if chosen:
+            AP_CHOSEN.touch()
+        else:
+            AP_CHOSEN.unlink(missing_ok=True)
+    except OSError as e:
+        print(f"vb-wifi-join: could not update {AP_CHOSEN}: {e}", file=sys.stderr)
+
+
 def _err(r: subprocess.CompletedProcess) -> str:
     lines = (r.stderr or r.stdout).strip().splitlines()
     return lines[-1] if lines else "nmcli failed"
@@ -205,6 +231,7 @@ def _apply() -> int:
         _clear()
         return 2
     action = req["action"]
+    _ap_chosen(action == "ap")
     if action == "ap":
         r = _up(manage.AP_CON)
         _result(r.returncode == 0, "Back on the access point." if r.returncode == 0 else _err(r))
@@ -263,9 +290,11 @@ def _visible(radio: str, rescan: bool = False) -> set[str]:
     return {line for line in r.stdout.splitlines() if line} if r.returncode == 0 else set()
 
 
-def _look(ssid: str, radio: wifiradio.Radio, scans: int = 3, pause_if_missing: bool = False) -> tuple[set[str], bool]:
+def _look(ssid: str, radio: wifiradio.Radio, scans: int = 3, pause_if_missing: bool = False,
+          may_pause: bool = True) -> tuple[set[str], bool]:
     """(the networks seen, whether the access point was paused to see them). A pause takes the
-    access point down; the caller joins or brings it back."""
+    access point down; the caller joins or brings it back. may_pause=False never does: a
+    retry must not drop the people on the access point."""
     seen: set[str] = set()
     for _ in range(scans):  # the radio has just come up in AP mode: the first scan can come back empty
         manage._nmcli("device", "wifi", "rescan", "ifname", radio.name)
@@ -275,7 +304,7 @@ def _look(ssid: str, radio: wifiradio.Radio, scans: int = 3, pause_if_missing: b
             return seen, False
     # The bridge's own network can sit in the scan list from before the move (seen 2026-10-10 at
     # signal 0 after every scan had failed), so it says nothing about whether a scan worked.
-    if seen - {_ssid_of(manage.AP_CON)} and not pause_if_missing:
+    if not may_pause or (seen - {_ssid_of(manage.AP_CON)} and not pause_if_missing):
         return seen, False
     # Not one network: this radio cannot scan while it is the access point. NetworkManager may
     # refuse the rescan, or accept it while the driver refuses (TP-Link Archer T2U Nano,
@@ -294,28 +323,120 @@ def boot(scans: int = 3) -> int:
         return _boot(scans)
 
 
-def _boot(scans: int) -> int:
+def _boot(scans: int, joined: list[str] | None = None) -> int:
+    """joined, when given, gets the home network's name if it is up at the end (for home())."""
     name = home_network()
-    if not name or name not in saved_networks():
+    # One line for every way out: a card that sat on its access point for hours said nothing (2026-10-30).
+    if not name:
+        _log("no home network is marked, staying on the access point")
+        return 0
+    if name not in saved_networks():
+        _log(f"home network {name} is not a remembered network, staying on the access point")
         return 0
     if _device().get("GENERAL.CONNECTION", "") == name:
+        _log(f"already on {name}")
+        _joined(joined, name)
+        return 0
+    if AP_CHOSEN.exists():  # only after a service restart: /run is empty at boot
+        _log("the access point was chosen, staying on it")
         return 0
     ssid = _ssid_of(name)
     radio = wifiradio.pick()
     seen, paused = _look(ssid, radio, scans)
     if ssid not in seen:
         if paused:
-            print(f"vb-wifi-home: {name} not in range, back to the access point")
+            _log(f"{name} not in range, back to the access point")
             return 0 if _up(manage.AP_CON).returncode == 0 else 1
-        print(f"vb-wifi-home: {name} not in range, staying on the access point")
+        _log(f"{name} not in range, staying on the access point")
         return 0
     r = wifiradio.bring_up(name, radio)
     _result(r.returncode == 0, f"Rejoined {name} at boot." if r.returncode == 0 else f"Could not rejoin {name} at boot: {_err(r)}")
     if r.returncode != 0:
+        _log(f"could not rejoin {name}: {_err(r)}, back to the access point")
         _up(manage.AP_CON)
         return 1
+    _log(f"rejoined {name}")
+    _joined(joined, name)
     return 0
 
 
+def _log(msg: str) -> None:
+    print(f"vb-wifi-home: {msg}", flush=True)
+
+
+def _joined(joined: list[str] | None, name: str) -> None:
+    if joined is not None:
+        joined.append(name)
+
+
+class Rejoin:
+    """After boot(): one look per tick. Once the home network has been up since boot, a fall back to
+    the access point that nobody asked for (NetworkManager gives a profile up after one failed
+    handshake, and the home profile never autoconnects) is undone as soon as the network is in
+    range again. Each failed try waits twice as long before the next, up to RETRY_MAX_S."""
+
+    def __init__(self, was_home: bool = False, clock=time.monotonic) -> None:
+        self.was_home = was_home
+        self.clock = clock
+        self.due: float | None = None       # when the next try is allowed, while waiting
+        self.wait = RETRY_FIRST_S
+
+    def tick(self) -> None:
+        name = home_network()
+        con = _device().get("GENERAL.CONNECTION", "")
+        if name and con == name:
+            if self.due is not None:
+                _log(f"back on {name}")
+            self.was_home, self.due, self.wait = True, None, RETRY_FIRST_S
+            return
+        if not name or con != manage.AP_CON or not self.was_home or AP_CHOSEN.exists():
+            return
+        now = self.clock()
+        if self.due is None:
+            _log(f"{name} dropped, trying again in {self.wait} s")
+            self.due = now + self.wait
+            return
+        if now < self.due:
+            return
+        ssid = _ssid_of(name)
+        radio = wifiradio.pick()
+        seen, _ = _look(ssid, radio, scans=1, may_pause=False)
+        if ssid in seen:
+            r = wifiradio.bring_up(name, radio)
+            if r.returncode == 0:
+                _log(f"rejoined {name}")
+                _result(True, f"Rejoined {name} after it dropped.")
+                self.due, self.wait = None, RETRY_FIRST_S
+                return
+            # The try took the access point off the radio: put it back, as _boot does.
+            _log(f"could not rejoin {name}: {_err(r)}, back to the access point")
+            _up(manage.AP_CON)
+        elif not seen - {_ssid_of(manage.AP_CON)}:
+            # Some radios cannot scan while they are the access point (TP-Link T2U Nano: SCAN-FAILED -95),
+            # and a retry never pauses it, so the network is never seen until the next boot.
+            _log(f"{name} not seen: this radio found no networks while it is the access point")
+        else:
+            _log(f"{name} not in range")
+        self.wait = min(self.wait * 2, RETRY_MAX_S)
+        _log(f"trying again in {self.wait} s")
+        self.due = now + self.wait
+
+
+def home() -> int:
+    """vb-wifi-home.service: the boot rejoin, then watch for the home network dropping."""
+    joined: list[str] = []
+    with wifiradio.locked():
+        _boot(3, joined)
+    rj = Rejoin(was_home=bool(joined))
+    while True:
+        with wifiradio.locked(blocking=False) as mine:
+            if mine:
+                try:
+                    rj.tick()
+                except (OSError, subprocess.SubprocessError) as e:
+                    _log(f"tick failed: {e}")
+        time.sleep(POLL_S)
+
+
 if __name__ == "__main__":
-    sys.exit({"apply": apply, "boot": boot}[sys.argv[1]]())
+    sys.exit({"apply": apply, "boot": boot, "home": home}[sys.argv[1]]())

@@ -35,6 +35,7 @@ def card(tmp_path):
         app / "app-tokens.json": "{}",
         app / "ssh.json": "{}",
         app / "ssh-request.json": "{}",
+        app.parent / "ssh" / "authorized_keys": "ssh-ed25519 bench-mac",
         app / "wifi-country.json": '{"country": "US"}',
         app / "networks" / "HomeNet.nmconnection": "[wifi]\nssid=HomeNet\n",
         app.parent / "tailscale" / "tailscaled.state": "bench node key",
@@ -72,13 +73,17 @@ def card(tmp_path):
     return root, app
 
 
-def run(tmp_path, **env):
+def run(tmp_path, files=None, **env):
+    """files: {path under persist/vector-bridge: text}, written over the card's own."""
     bin_dir = tmp_path / "bin"
     bin_dir.mkdir()
     for name in COMMANDS:
         (bin_dir / name).write_text(STUB)
         (bin_dir / name).chmod(0o755)
     root, app = card(tmp_path)
+    for rel, text in (files or {}).items():
+        (app / rel).parent.mkdir(parents=True, exist_ok=True)
+        (app / rel).write_text(text)
     log = tmp_path / "log"
     log.touch()
     r = subprocess.run(["bash", str(SCRIPT)], capture_output=True, text=True, check=False, env={
@@ -99,7 +104,7 @@ def test_scrubs_every_bench_item_and_arms_first_boot(tmp_path):
                  root / "boot/firmware/ssh", root / "boot/firmware/vector-bridge-wifi.txt",
                  root / "etc/ssh/ssh_host_ed25519_key", root / "etc/shadow-", root / "etc/gshadow-",
                  app / "wizard.json", app / "admin-pin.json", app / "app-tokens.json", app / "ssh.json",
-                 app / "ssh-request.json", app / "wifi-country.json"):
+                 app / "ssh-request.json", app.parent / "ssh", app / "wifi-country.json"):
         assert not gone.exists(), gone
     # No Wi-Fi country (R-D7) and no cloud-init seed pointer: the rest of the command line is untouched.
     assert (root / "boot/firmware/cmdline.txt").read_text() == "console=tty1 root=PARTUUID=648a39af-02 rootwait\n"
@@ -137,6 +142,12 @@ def test_refuses_without_the_ssh_units(tmp_path):
     assert r.returncode == 1 and "vb-ssh-apply.path is not installed" in r.stderr
     assert (app / "admin-pin.json").exists() and (root / "home/vectorbridge/.ssh/authorized_keys").exists()
     assert "usermod -p ! vectorbridge" not in calls
+
+
+def test_refuses_without_the_ssh_keys_unit(tmp_path):
+    r, calls, _, _ = run(tmp_path, STUB_DISABLED="vb-ssh-keys.path")
+    assert r.returncode == 1 and "vb-ssh-keys.path is not installed" in r.stderr
+    assert "poweroff " not in calls
 
 
 def test_refuses_without_avahi_daemon(tmp_path):
@@ -194,3 +205,15 @@ def test_writes_the_package_manifest_for_the_source_offer(tmp_path):
     manifest = (root / "boot/firmware/vector-bridge-packages.txt").read_text()
     assert manifest == "libhamlib-utils\t4.6.2-1~bpo13+1\thamlib\t4.6.2-1~bpo13+1\n"
     assert any(c.startswith("dpkg-query -W -f=") and "${source:Package}" in c for c in calls)
+
+
+def test_ships_no_bench_kits_or_profiles_and_the_default_time_limit_with_the_bench_gains(tmp_path):
+    from vector_bridge import config
+    conf = "# VectorBridge configuration\n\nrx_gain = 83\ntx_gain = 70\n# The transmit time limit.\ntx_audio_cap_s = 30\n"
+    r, _, _, app = run(tmp_path, files={
+        "config.toml": conf, "kits/Field One.json": "{}", "presets/hamlib-2057.toml": 'name = "hamlib-2057"\n'})
+    assert r.returncode == 0, r.stderr
+    assert list((app / "kits").iterdir()) == [] and list((app / "presets").iterdir()) == []
+    cfg = config.load(app / "config.toml")
+    assert (cfg.rx_gain, cfg.tx_gain, cfg.tx_audio_cap_s) == (83, 70, config.Config().tx_audio_cap_s)
+    assert "tx_audio_cap_s" not in (app / "config.toml").read_text() and not (app / "config.toml.new").exists()

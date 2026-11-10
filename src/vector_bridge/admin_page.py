@@ -89,7 +89,24 @@ ADMIN_JS = r"""
         };
         scrim.querySelector('#vbp-1').focus();
       };
-      const finish = v => { scrim.remove(); done(v); };
+      // Roadmap 4.6: on a phone the page under the prompt (the Wi-Fi page's name box) could take focus
+      // and the keyboard back, so the PIN went nowhere. Shut the rest of the page while the prompt is up.
+      const shut = [...document.body.children].filter(e => e !== scrim && !e.inert);
+      const keep = e => {
+        if (scrim.isConnected && !scrim.contains(e.target)) { const i = scrim.querySelector('input'); if (i) i.focus(); }
+      };
+      // Escape cancels the prompt and stops there, so it never closes the sheet underneath.
+      const esc = e => { if (e.key === 'Escape') { e.preventDefault(); e.stopImmediatePropagation(); finish(false); } };
+      const finish = v => {
+        document.removeEventListener('keydown', esc, true);
+        document.removeEventListener('focusin', keep, true);
+        shut.forEach(e => { e.inert = false; });
+        scrim.remove(); done(v);
+      };
+      if (document.activeElement && document.activeElement !== document.body) document.activeElement.blur();
+      shut.forEach(e => { e.inert = true; });
+      document.addEventListener('focusin', keep, true);
+      document.addEventListener('keydown', esc, true);
       document.body.appendChild(scrim);
       render(mode);
     });

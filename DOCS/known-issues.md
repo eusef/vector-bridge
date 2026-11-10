@@ -1,6 +1,6 @@
 # Known issues
 
-What does not work yet in VectorBridge 0.2.0, or works with a catch, and what to do about it. Each item says what you will see, then what to do.
+What does not work yet in VectorBridge 0.2.3, or works with a catch, and what to do about it. Each item says what you will see, then what to do.
 
 ## Wi-Fi
 
@@ -16,23 +16,17 @@ The bridge's network has no internet and does not pass any through. Your phone m
 
 What to do: nothing; this is expected. Joining a home network from the Wi-Fi page swaps the bridge's own network for that one, since one radio carries one network at a time.
 
-### Home Wi-Fi rejoins only at boot
+### Home Wi-Fi out of range at power-up is not rejoined later
 
-The bridge rejoins the home network you marked only when it starts up. If that network was out of range at power-up, or drops later, the bridge stays on (or goes back to) its own network. It does not keep looking.
+The bridge rejoins the home network you marked when it starts up, and again if that network drops later (a router restart, for example): it looks every so often, with a growing wait of up to five minutes, and joins as soon as the network is back. But if the network was out of range at power-up, the bridge stays on its own network and does not keep looking, so a day in the field never costs a scan. Some USB Wi-Fi adapters (the TP-Link Archer T2U Nano, for one) cannot look for networks while they run the bridge's own network, so with one of those a dropped home network is not rejoined until the next restart either.
 
-What to do: on the Wi-Fi page, tap the saved network to join it now, or restart the bridge once you are in range.
+What to do: on the Wi-Fi page, tap the saved network to join it now, or restart the bridge once you are in range. "Back to the access point" on that page also stops the rejoining until the next restart or the next join from the page.
 
 ### The Pi's built-in Wi-Fi drops audio
 
-The Pi Zero 2 W's own radio is 2.4 GHz only. Under audio load it loses up to about 1.6% of packets, in stalls of up to 3 s, which costs decodes. Through a USB adapter on 5 GHz the loss was 0 to 0.03%. The home page shows a notice while the built-in radio is in use, until you tap Got It in that browser.
+The Pi Zero 2 W's own radio is 2.4 GHz only. Under audio load it loses up to about 1.6% of packets, in stalls of up to 3 s, which costs decodes. Through a USB adapter on 5 GHz the loss was 0 to 0.03%. The Pi 3 Model B radio is 2.4 GHz only too. The home page shows a notice while a 2.4 GHz only built-in radio is in use, until you tap Got It in that browser. The Pi 3 B+, Pi 4 and Pi 5 radios also do 5 GHz, so once a Wi-Fi country is set no notice shows on them: a Pi 3 B+ lost no packets on its own 5 GHz network in a 14-minute test.
 
 What to do: use a USB Wi-Fi adapter that can run an access point, and set your Wi-Fi country on the Wi-Fi page: until it is set, the bridge stays on 2.4 GHz. The Panda AC600 (MT7610U) is the one tested most. The TP-Link Archer T2U Nano also works but cannot scan while it hosts the bridge's network, and it has stalled during transmit with an IC-705 on the bench.
-
-### The Wi-Fi page can take two or three tries on a phone
-
-When you join a saved network or change the SSH setting on the Wi-Fi page, the network name box can take the keyboard back just as the admin PIN prompt is opening, and the action does not go through. Seen on an iPhone with VectorBridge 0.2.0.
-
-What to do: tap the button again; it usually works on the second or third try. A fix is planned for the next release.
 
 ### The sign-in page may not open on its own
 
@@ -133,6 +127,8 @@ On the bench card about 1 restart in 3 hung and needed the power pulled. It is n
 What to do: if the bridge has not come back after a few minutes, pull the power and plug it back in. The card is read-only in normal use, so this is safe, unless the home page says "Maintenance mode. Do not pull power."
 
 ### Not yet proven on hardware
+
+The Pi 5 is listed in Raspberry Pi Imager but has not been tested yet; the Zero 2 W, Pi 3 B+ and Pi 4 B have. If you try one, please open an issue on GitHub saying what worked and what did not.
 
 These are built and covered by tests but have not yet been run on a real card: the radio unkeying when the bridge crashes or is stopped while transmitting, and the Transmit Time Limit cutting RF on a radio keyed by VOX.
 

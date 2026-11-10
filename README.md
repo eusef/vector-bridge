@@ -1,6 +1,6 @@
 # VectorBridge
 
-A Raspberry Pi Zero 2 W that presents an HF radio to a tablet or computer as a full-duplex network sound card over Wi-Fi. It was built for the Elecraft KX2 and the Vector-Comm iPad app; the audio path (USB sound card into the radio's audio jacks) is the one already proven with a wired splitter, and only the cable between the client and the radio is replaced by UDP.
+A Raspberry Pi (Zero 2 W, 3, 4 or 5) that presents an HF radio to a tablet or computer as a full-duplex network sound card over Wi-Fi. It was built for the Elecraft KX2 and the Vector-Comm iPad app; the audio path (USB sound card into the radio's audio jacks) is the one already proven with a wired splitter, and only the cable between the client and the radio is replaced by UDP.
 
 On top of the audio transport the bridge is a field appliance: it boots as its own Wi-Fi network with a captive portal, keeps its card read-only so a power pull is safe, walks a rig to ready with a setup wizard, keeps transmit locked until a safety ladder has passed, and alerts a phone and the status LED when something that was working stops.
 
@@ -55,10 +55,10 @@ Every `DOCS/*.md` is also served on the card at `http://vectorbridge/docs/`.
 
 ## End user: write the image with Raspberry Pi Imager
 
-You need a Raspberry Pi Zero 2 W, a microSD card of 16 GB or more (the image unpacks to about 9.4 GB), and a phone. A USB Wi-Fi adapter is recommended (`DOCS/field-network.md`, "USB Wi-Fi adapter"). Read `DOCS/known-issues.md` before you take the bridge to the field.
+You need a Raspberry Pi (Zero 2 W, 3, 4 or 5; the Pi 5 is not tested yet), a microSD card of 16 GB or more (the image unpacks to about 9.4 GB), and a phone. A USB Wi-Fi adapter is recommended (`DOCS/field-network.md`, "USB Wi-Fi adapter"). Read `DOCS/known-issues.md` before you take the bridge to the field.
 
 1. Download `vector-bridge-VERSION.img.xz` and `vector-bridge-VERSION.img.xz.sha256` from the release. To check the download, run `shasum -a 256 -c vector-bridge-VERSION.img.xz.sha256` in the same folder (`sha256sum -c` on Linux); it prints `OK`.
-2. Open [Raspberry Pi Imager](https://www.raspberrypi.com/software/). Device: **Raspberry Pi Zero 2 W**. OS: **Use Custom**, then pick the `.img.xz`. Storage: your card. (Or skip the download: start Imager with `--repo https://github.com/eusef/vector-bridge/releases/download/vVERSION/os_list.json`, and VectorBridge appears in its OS list with the checksum verified for you. `DOCS/write-the-image.md` shows each step.)
+2. Open [Raspberry Pi Imager](https://www.raspberrypi.com/software/). Device: your board (**Raspberry Pi Zero 2 W**, **3**, **4** or **5**). OS: **Use Custom**, then pick the `.img.xz`. Storage: your card. (Or skip the download: start Imager with `--repo https://github.com/eusef/vector-bridge/releases/download/vVERSION/os_list.json`, and VectorBridge appears in its OS list with the checksum verified for you. `DOCS/write-the-image.md` shows each step.)
 3. If Imager offers customisation, choose **Skip customisation**. The bridge does not use Imager's hostname, user, Wi-Fi or SSH settings; it asks for what it needs on its own first-boot page.
 4. Write the card, put it in the Pi and power it up. On its first boot the bridge makes an open Wi-Fi network named `VectorBridge-XXXX`.
 5. Join that network from your phone. The sign-in page opens by itself (if it does not, browse to `http://vectorbridge/wifi`). Choose a new network name, a passphrase and your Wi-Fi country, then save. The new name must differ from the open one, so phones do not try the old, open entry. The bridge reboots once.

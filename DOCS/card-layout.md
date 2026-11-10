@@ -23,12 +23,17 @@ things that survive are under `/persist/vector-bridge`:
 | `ap-unsecured` | `vb-firstboot` | marker: the access point is still open (first boot) |
 | `ap-pending.json` | Wi-Fi page | a name and passphrase change waiting for `vb-ap-apply` |
 | `wifi-join.json`, `wifi-join-result.json` | Wi-Fi page, `vb-wifi-join` | a join request and its outcome |
-| `home-network.json` | Wi-Fi page, read by `vb-wifi-home` at boot | the remembered network rejoined at boot when in range |
+| `home-network.json` | Wi-Fi page, read by `vb-wifi-home` | the remembered network rejoined at boot when in range, and again after it drops |
 | `wifi-country.json` | Wi-Fi page and first-boot sheet, read by `vb-wifi-radio` | the Wi-Fi country (R-D7), set in the kernel with `iw reg set` at every start; none: 2.4 GHz only |
 | `ssh-request.json`, `ssh-result.json` | Wi-Fi page, `vb-ssh-apply` | an SSH on (with the new password's hash) or off request, and its outcome |
 | `ssh.json` | `vb-ssh-apply` or the console (root only, 0600), read by `vb-ssh-boot` at boot | SSH on or off and the login password's hash: the overlay forgets both at every reboot |
 | `maintenance` | `vb-maintenance` | flag: the card is in maintenance mode |
 | `last-good/`, `logs/` | nothing yet | created by `setup-readonly-root.sh`, reserved |
+
+One more lives beside it, root only (0700) so the web user, who owns `/persist/vector-bridge`,
+cannot rename or plant it: `/persist/ssh/authorized_keys`, a copy of the login's
+`~/.ssh/authorized_keys` that `vb-ssh-keys` saves whenever that file changes (and deletes when it
+is deleted) and `vb-ssh-boot` puts back at boot.
 
 The boot partition also holds `vector-bridge-wifi.txt` with the current access point name
 and passphrase, written by `vb-firstboot` and `vb-ap-apply` with a brief rw remount of

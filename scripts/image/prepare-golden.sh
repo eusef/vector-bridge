@@ -17,8 +17,9 @@ MOUNT=${VECTOR_BRIDGE_PERSIST:-/persist}
 # Without vb-ap-apply.path a burned card's open access point could never be secured.
 # is-enabled with two units passes when either one is enabled, so ask one at a time.
 # Without the two vb-ssh units the owner could never turn SSH back on (R-D4).
+# Without vb-ssh-keys.path a key the owner adds would be gone at every reboot (roadmap 4.11).
 # Without avahi-daemon vectorbridge.local never resolves (REQ-NET-008).
-for u in vb-firstboot vb-ap-apply.path vb-wifi-join.path vb-ssh-apply.path vb-ssh-boot.service avahi-daemon.service; do
+for u in vb-firstboot vb-ap-apply.path vb-wifi-join.path vb-ssh-apply.path vb-ssh-boot.service vb-ssh-keys.path avahi-daemon.service; do
   systemctl is-enabled "$u" >/dev/null && continue
   echo "$u is not installed; run scripts/install.sh" >&2; exit 1; done
 
@@ -30,13 +31,26 @@ rm -f "$MOUNT"/vector-bridge/maintenance "$MOUNT"/vector-bridge/ap-pending.json 
   "$MOUNT"/vector-bridge/wifi-join.json "$MOUNT"/vector-bridge/wifi-join-result.json "$MOUNT"/vector-bridge/home-network.json \
   "$MOUNT"/vector-bridge/ssh.json "$MOUNT"/vector-bridge/ssh-request.json "$MOUNT"/vector-bridge/ssh-result.json \
   "$MOUNT"/vector-bridge/wifi-country.json
+# The saved SSH keys (root only, roadmap 4.11) go before ~/.ssh does (below): vb-ssh-keys.path then
+# fires, finds nothing to change and so never remounts $MOUNT read-only in the middle of this scrub.
+rm -rf "$MOUNT"/ssh
 # The bench admin PIN and the apps' tokens: kept, every owner's bridge would ask for a PIN they never set.
 rm -f "$MOUNT"/vector-bridge/admin-pin.json "$MOUNT"/vector-bridge/app-tokens.json
 # Bench state must not ship either: the wizard's progress, the transmit ladder's recorded overrides,
-# alert settings, logs and last-good copies (0.1.1 and 0.1.2 shipped them all). config.toml stays:
-# its gains are the bench-proven values (maintainer, 2026-09-22). presets/ and kits/ stay as they are.
+# alert settings, logs and last-good copies (0.1.1 and 0.1.2 shipped them all), and the bench's own kits
+# and saved radio profiles (the shipped profiles are built into the code; 0.2.1 and 0.2.2 shipped the
+# maintainer's kits, ROADMAP 4.15). config.toml stays: its gains are the bench-proven values (maintainer,
+# 2026-09-22). Its transmit time limit goes back to the default (the bench card's 30 s shipped in 0.2.2).
 rm -f "$MOUNT"/vector-bridge/wizard.json "$MOUNT"/vector-bridge/ladder-overrides.json "$MOUNT"/vector-bridge/alerts.json
-for d in "$MOUNT"/vector-bridge/logs "$MOUNT"/vector-bridge/last-good; do [ -d "$d" ] && find "$d" -mindepth 1 -delete; done
+for d in "$MOUNT"/vector-bridge/logs "$MOUNT"/vector-bridge/last-good "$MOUNT"/vector-bridge/kits "$MOUNT"/vector-bridge/presets; do
+  [ -d "$d" ] && find "$d" -mindepth 1 -delete
+done
+conf="$MOUNT"/vector-bridge/config.toml
+if [ -f "$conf" ]; then  # rewritten in place: the file keeps the service's owner and mode
+  sed -E '/^[[:space:]]*tx_audio_cap_s[[:space:]]*=/d' "$conf" > "$conf.new"
+  cat "$conf.new" > "$conf"
+  rm -f "$conf.new"
+fi
 # Bench access (scripts/dev): the tailnet node's keys, both the saved copy and tailscaled's live one
 # on this (maintenance mode, real) root, so no owner's card joins the bench tailnet as the same node;
 # and the password-free sudo rule for agent deploys.

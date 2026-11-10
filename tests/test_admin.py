@@ -448,3 +448,51 @@ def test_port_4532_takes_a_live_app_token_but_not_a_browser_session(gate):
     assert not gate.app_token_valid(session) and not gate.app_token_valid("") and not gate.app_token_valid(None)
     gate.revoke({"revoke": gate.app_tokens()["tokens"][0]["id"]})
     assert not gate.app_token_valid(app)
+
+
+# ---- every Wi-Fi switch request is logged, refused ones too ---------------------
+
+
+def join_lines(capsys):
+    return [line for line in capsys.readouterr().out.splitlines() if "event=wifi_request" in line]
+
+
+def test_a_join_refused_for_the_pin_is_logged(server, capsys):
+    port, gate, _ = server
+    gate.set_pin({"pin": "4821"}, authorized=False)
+    capsys.readouterr()
+    assert request(port, "POST", "/api/join", {"action": "up", "ssid": "HomeNet"})[0] == 401
+    (line,) = join_lines(capsys)
+    assert "level=WARN" in line and "status=401" in line and "error=pin_required" in line and "peer=127.0.0.1" in line
+    assert "HomeNet" not in line
+
+
+@pytest.mark.parametrize("headers", [{"Origin": "http://evil.example"}, {"Host": "evil.example"}])
+def test_a_cross_site_join_is_logged(server, capsys, headers):
+    port, _, _ = server
+    assert request(port, "POST", "/api/join", {"action": "ap"}, headers)[0] == 403
+    (line,) = join_lines(capsys)
+    assert "status=403" in line and "error=forbidden_origin" in line
+
+
+def test_an_accepted_join_is_logged_without_the_network_or_passphrase(server, tmp_path, monkeypatch, capsys):
+    from vector_bridge import wifijoin
+    monkeypatch.setattr(wifijoin, "PENDING", tmp_path / "wifi-join.json")
+    monkeypatch.setattr(wifijoin.persist, "save", lambda p, d, **k: p.write_text(d))
+    port, gate, _ = server
+    gate.set_pin({"pin": "4821"}, authorized=False)
+    token = gate.login({"pin": "4821"})[1]["token"]
+    capsys.readouterr()
+    body = {"action": "join", "ssid": "HomeNet", "passphrase": "s3cret-pass"}
+    assert request(port, "POST", "/api/join", body, bearer(token))[0] == 200
+    assert request(port, "POST", "/api/join", {**body, "passphrase": "short"}, bearer(token))[0] == 400
+    ok, bad = join_lines(capsys)
+    assert "level=INFO" in ok and "status=200" in ok and "action=join" in ok
+    assert "status=400" in bad and "Passphrase" in bad and "action=join" in bad
+    assert not any(s in ok + bad for s in ("HomeNet", "s3cret-pass", "short"))
+
+
+def test_other_posts_are_not_logged_as_wifi_requests(server, capsys):
+    port, _, _ = server
+    request(port, "POST", "/api/gain", {"rx": 40})
+    assert join_lines(capsys) == []

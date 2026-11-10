@@ -678,7 +678,7 @@ function checkAlerts() {
 const ADAPTER_TIP = 'vb-adapter-tip-seen';
 function showAdapterTip() {
   const j = S.join;
-  if (FIRST_BOOT || !j || !j.radio || j.radio_usb !== false || !$('alert').hidden) return;
+  if (FIRST_BOOT || !j || !j.radio || j.radio_usb !== false || j.radio_5ghz || !$('alert').hidden) return;
   try { if (localStorage.getItem(ADAPTER_TIP)) return; } catch (e) {}
   $('alert').innerHTML = `<div class="scrim" aria-hidden="true" style="position:fixed;z-index:25"></div><section class="dlg" role="dialog" aria-modal="true" aria-labelledby="tiph" style="position:fixed;z-index:26">` +
     `<div class="head">${icon('wifi', 22)}<h2 id="tiph" tabindex="-1">Better Wi-Fi with a USB adapter</h2></div>` +

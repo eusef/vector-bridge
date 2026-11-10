@@ -6,8 +6,11 @@ no CI: one golden card, captured with `dd`, shrunk with PiShrink.
 Base (read from interim-fb72fbf, 2026-10-24): Raspberry Pi OS Lite, 64-bit only (every package
 `arm64` or `all`), Debian 13.7 trixie, `/etc/rpi-issue` "Raspberry Pi reference 2026-10-06" (pi-gen
 stage2, the Lite build), kernel 6.18.50. Start a new golden card from the same "Raspberry Pi OS Lite
-(64-bit)", fresh, as in "Golden card from a fresh base" below. The image is built and tested on the Raspberry Pi Zero 2 W only. Imager lists Zero 2 W images under its
-`pi3-64bit` tag, so they also show to Pi 3 owners; the listing description says "Pi Zero 2 W only".
+(64-bit)", fresh, as in "Golden card from a fresh base" below. One image serves the Pi Zero 2 W, Pi 3, Pi 4 and Pi 5 (the
+base is Raspberry Pi's own 64-bit image for all of them). Tested so far: Zero 2 W, Pi 3 Model B+
+(2026-11-07) and Pi 4 Model B (2026-11-09, built from this fresh base); the Pi 5 is not tested yet. The
+Imager listing carries the `pi3-64bit`, `pi4-64bit` and `pi5-64bit` tags (Imager files the Zero 2 W under
+`pi3-64bit`).
 
 ## How each burned card becomes its own bridge
 
@@ -99,14 +102,15 @@ password. Until then the console's command line has no password for `sudo`.
    verified: "Golden card from a fresh base" below. On an AP-only Pi use the by-hand enter steps
    (`DOCS/archive/HANDOFF.md`).
 2. On the Pi: `sudo bash scripts/image/prepare-golden.sh`. It removes the host keys, every
-   `authorized_keys`, shell history, journal, the maintenance flag, the bench helpers (`~/vb-enter.sh`,
+   `authorized_keys` (with the saved copy on `/persist/ssh`), shell history, journal, the maintenance flag, the bench helpers (`~/vb-enter.sh`,
    `~/vb-golden.sh`, `~/vb-golden.log`, `~/vb-deploy`, `~/.ssh`) and the `~/vector-bridge` checkout, the
    bench access from `scripts/dev` (the Tailscale node state on `/persist/tailscale`, with `tailscaled`
    disabled, and its live copy under `/var/lib/tailscale`, removed again at the end once `tailscaled` is
    stopped, because it rewrites it on the way down; the agent-deploy sudo rule), NetworkManager's
    leases, seen BSSIDs, timestamps and secret key (also at the end, after stopping it), the bench state on
    `/persist/vector-bridge` (wizard, ladder overrides, alerts, Wi-Fi join files, SSH files, admin PIN,
-   app tokens, the Wi-Fi country, logs, last-good; `config.toml`, presets and kits stay), the Wi-Fi country
+   app tokens, the Wi-Fi country, logs, last-good, kits and saved radio profiles; `config.toml` stays with its
+   gains, its `tx_audio_cap_s` line removed so the default applies), the Wi-Fi country
    on the kernel command line (`cfg80211.ieee80211_regdom=`, which Raspberry Pi Imager's OS settings write;
    R-D7), Raspberry Pi Imager's cloud-init seed (`user-data`, `meta-data` and `network-config` on the boot
    partition, which hold the bench login's password hash and SSH key; the `ds=` pointer on the command
@@ -156,7 +160,7 @@ password. Until then the console's command line has no password for `sudo`.
    boot like any other.
 7. Publish (ROADMAP 4.1 and 4.2), on the public repository per `PUBLISHING.md`, after the export commit
    for this version is pushed there. `scripts/image/os-list.sh VERSION` writes `imager/os_list.json`
-   (the sizes and checksums Raspberry Pi Imager verifies, `init_format: "none"`, `pi3-64bit`, and the
+   (the sizes and checksums Raspberry Pi Imager verifies, `init_format: "none"`, the board tags, and the
    fixed release download links); commit it to the dev repository with the version. Then, from `release/`:
 
        gh release create vVERSION --repo eusef/vector-bridge --prerelease \
@@ -216,7 +220,21 @@ How the interim-fb72fbf golden card was made (2026-10-23), from
 
 ## Acceptance (bring-up P8)
 
-Last run: 0.2.1, written with Raspberry Pi Imager 2.0.12 from the local `.img.xz` (Use Custom), 2026-10-29,
+Last run: 0.2.3, written from the local `.img.xz` (Use Custom, Device Raspberry Pi 4), 2026-11-10, steps 1 to 8
+pass on a Pi 4 Model B: the country list read "Not set" and the open name was refused; with the country set
+to US the access point came up on the built-in radio at 5 GHz (5765 MHz, channel 153); machine-id and host
+keys are new (the image carries no host keys); `/persist` held no kits, presets, wizard, token or
+home-network files and `config.toml` has no `tx_audio_cap_s` (ROADMAP 4.15); `/persist` grew to 20 GB;
+port 4532 answers `RPRT -9` to a Wi-Fi client with no token. Steps 6 to 8 were confirmed by the maintainer
+on the phone and from a computer (rename, home join and Back to the access point, power pull while joined,
+SSH password after a reboot, SSH refused after turning it off and rebooting); the shell checks of steps 6
+and 7 (values in both places, the profile under `networks/`, `autoconnect no` after the pull) and the two
+HDMI console checks were not run. Not yet run on a Zero 2 W.
+Before that: 0.2.2, written from the local `.img.xz` (Use Custom), 2026-10-29: boot, SSH enable, admin PIN and
+home Wi-Fi join done on the phone, `/api/rigctl` reports `login_required: true`, port 4532 answers `RPRT -9` to a
+client with no token; the remaining acceptance steps were not repeated (one-line change over 0.2.1). The
+maintainer's own kits were found on the card: `prepare-golden.sh` keeps kits, presets and `config.toml`
+(ROADMAP 4.15). Before that: 0.2.1, written with Raspberry Pi Imager 2.0.12 from the local `.img.xz` (Use Custom), 2026-10-29,
 steps 1 to 8 pass on a Zero 2 W (step 8: SSH still starts after the reboot), port 4532 answers `RPRT -9` to a
 client with no token, and the served `DOCS/` carry no tool names; the hosted `os_list` was checked in Imager
 afterwards (the Device page is empty with this list, pick OS directly). Before that: 0.2.0, written from the
@@ -248,7 +266,7 @@ On the second card, in order:
        sudo vector-bridge ap show                 # the chosen name and passphrase
        cat /boot/firmware/vector-bridge-wifi.txt  # the same two values
        /usr/sbin/iw reg get | sed -n 2p           # country <the one chosen in step 3>
-       /usr/sbin/iw dev wlan0 info                # AP on the built-in radio: channel 6 (2437 MHz), an ssid line
+       /usr/sbin/iw dev wlan0 info                # AP on the built-in radio, an ssid line: channel 6 (2437 MHz) on a Zero 2 W or Pi 3 B; a 5 GHz channel (DOCS/field-network.md list) on a Pi 3 B+, 4 or 5
        grep -c regdom /boot/firmware/cmdline.txt  # 0
        grep -c 'ds=' /boot/firmware/cmdline.txt   # 0
        ls /boot/firmware/{user-data,meta-data,network-config}   # none of the three exists

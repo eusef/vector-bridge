@@ -13,9 +13,14 @@ that are already open stay open (ssh.service kills only the listener).
 In field mode the root is an overlay, so a new password and a started ssh.service are both gone
 at the next boot. The setting therefore lives on /persist (STATE, root only) and
 vb-ssh-boot.service applies it at every boot. A card with no STATE (the bench) is left alone.
+
+The login's SSH keys (~/.ssh/authorized_keys, roadmap 4.11) are forgotten the same way. Whenever
+the file changes, vb-ssh-keys.path has root copy it to KEYS (deleted when the file is), and
+vb-ssh-boot puts it back at boot. No KEYS (never changed since install): the keys are left alone.
 """
 from __future__ import annotations
 
+import contextlib
 import json
 import os
 import pwd
@@ -23,6 +28,7 @@ import re
 import stat
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 from . import apsetup, persist
@@ -30,6 +36,12 @@ from . import apsetup, persist
 PENDING = persist.APP_DIR / "ssh-request.json"
 RESULT = persist.APP_DIR / "ssh-result.json"
 STATE = persist.APP_DIR / "ssh.json"
+# Root only (0700), not under APP_DIR: the web user owns that directory and could rename files in it.
+KEYS = persist.PERSIST_MOUNT / "ssh" / "authorized_keys"
+KEYS_MAX = 64 * 1024
+# systemd does not watch the file while vb-ssh-keys runs, so a save waits this long and looks again.
+KEYS_SETTLE_S = 1.0
+KEYS_PASSES = 5
 PATH_UNIT = "vb-ssh-apply.path"
 UNIT = "ssh.service"
 PASS_MIN, PASS_MAX = 8, 64
@@ -198,11 +210,144 @@ def apply() -> int:
         _clear()
 
 
+# ---- SSH keys (roadmap 4.11) ------------------------------------------------------------
+
+
+def _login() -> pwd.struct_passwd:
+    return pwd.getpwuid(1000)
+
+
+def _open_ssh_dir(user: pwd.struct_passwd, create: bool = False) -> int | None:
+    """An fd on the login's ~/.ssh, or None when it is missing. A symlink, or a directory that the
+    login does not own, raises: root must not be steered to another directory."""
+    path = Path(user.pw_dir) / ".ssh"
+    made = False
+    if create and not os.path.lexists(path):
+        os.mkdir(path, 0o700)
+        made = True
+    try:
+        fd = os.open(path, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+    except FileNotFoundError:
+        return None
+    # Through the fd, never the path: the login may have swapped the new directory for a symlink.
+    if made and os.fstat(fd).st_uid == os.geteuid() != user.pw_uid:
+        os.fchown(fd, user.pw_uid, user.pw_gid)
+    if os.fstat(fd).st_uid != user.pw_uid:
+        os.close(fd)
+        raise OSError(f"{path} is not owned by {user.pw_name}")
+    return fd
+
+
+def _read_keys(name: str, dir_fd: int | None, path: Path, owner: int) -> bytes | None:
+    """The file's bytes, or None when it is missing. Not a regular file, owned by someone else,
+    writable by others or too big: raises."""
+    try:
+        fd = os.open(name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=dir_fd)
+    except FileNotFoundError:
+        return None
+    with os.fdopen(fd, "rb") as f:
+        st = os.fstat(fd)
+        if not stat.S_ISREG(st.st_mode):
+            raise OSError(f"{path} is not a regular file")
+        if st.st_uid != owner or st.st_mode & 0o022:
+            raise OSError(f"{path} has the wrong owner or mode")
+        data = f.read(KEYS_MAX + 1)
+    if len(data) > KEYS_MAX:
+        raise OSError(f"{path} is over {KEYS_MAX} bytes")
+    return data
+
+
+def _keys_dir_ok() -> None:
+    """KEYS's directory must be root's own and closed to everyone else, or nothing in it is used."""
+    st = os.lstat(KEYS.parent)
+    if not stat.S_ISDIR(st.st_mode) or st.st_uid != os.geteuid() or st.st_mode & 0o077:
+        raise OSError(f"{KEYS.parent} is not a private root directory")
+
+
+def _saved_keys() -> bytes | None:
+    if not os.path.lexists(KEYS.parent):
+        return None
+    _keys_dir_ok()
+    return _read_keys(str(KEYS), None, KEYS, os.geteuid())
+
+
+def _live_keys(user: pwd.struct_passwd) -> bytes | None:
+    dfd = _open_ssh_dir(user)
+    if dfd is None:
+        return None
+    try:
+        return _read_keys("authorized_keys", dfd, Path(user.pw_dir) / ".ssh" / "authorized_keys", user.pw_uid)
+    finally:
+        os.close(dfd)
+
+
+def save_keys() -> int:
+    """Called by vb-ssh-keys.service when the login's authorized_keys changes: root copies it to
+    KEYS, or deletes KEYS when the file is gone. An unchanged copy is not written again. systemd
+    stops watching the file while this runs, so after a save it waits and looks again: a second
+    key added straight after the first is saved too."""
+    try:
+        user = _login()
+        path = Path(user.pw_dir) / ".ssh" / "authorized_keys"
+        for _ in range(KEYS_PASSES):
+            data = _live_keys(user)
+            if data == _saved_keys():
+                return 0
+            with persist.writable(KEYS):
+                if data is None:
+                    KEYS.unlink(missing_ok=True)
+                else:
+                    KEYS.parent.mkdir(mode=0o700, exist_ok=True)
+                    _keys_dir_ok()
+                    persist.atomic_write(KEYS, data, mode=0o600)
+            print(f"vb-ssh: {path} is gone, the saved keys are deleted" if data is None
+                  else f"vb-ssh: saved {path} for the next boot")
+            time.sleep(KEYS_SETTLE_S)
+    except (OSError, KeyError, subprocess.CalledProcessError) as e:
+        print(f"vb-ssh: could not save the SSH keys: {e}", file=sys.stderr)
+        return 1
+    print(f"vb-ssh: {path} kept changing; the next change is saved", file=sys.stderr)
+    return 1
+
+
+def restore_keys() -> bool:
+    """At boot: put KEYS back as the login's authorized_keys (0600, owned by the login), since
+    the overlay forgot it. Only a KEYS that root wrote, in root's own directory, is used."""
+    try:
+        data = _saved_keys()
+        if data is None:
+            return True
+        user = _login()
+        dfd = _open_ssh_dir(user, create=True)
+        if dfd is None:
+            raise OSError(f"{user.pw_dir}/.ssh could not be made")
+        tmp = ".authorized_keys.vb-ssh"
+        try:
+            with contextlib.suppress(FileNotFoundError):
+                os.unlink(tmp, dir_fd=dfd)
+            fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600, dir_fd=dfd)
+            with os.fdopen(fd, "wb") as f:
+                f.write(data)
+                f.flush()
+                os.fchown(fd, user.pw_uid, user.pw_gid)
+                os.fsync(fd)
+            os.replace(tmp, "authorized_keys", src_dir_fd=dfd, dst_dir_fd=dfd)
+        finally:
+            os.close(dfd)
+    except (OSError, KeyError) as e:
+        print(f"vb-ssh: could not put back the SSH keys: {e}", file=sys.stderr)
+        return False
+    print("vb-ssh: SSH keys put back at boot")
+    return True
+
+
 def boot() -> int:
-    """Called once by vb-ssh-boot.service: the overlay has forgotten the password and the started
-    ssh.service, so put back what STATE says. No STATE (the bench): leave the card as it is."""
+    """Called once by vb-ssh-boot.service: the overlay has forgotten the password, the started
+    ssh.service and the SSH keys, so put back what STATE and KEYS say. No STATE (the bench):
+    leave SSH and the password as they are."""
+    keys_ok = restore_keys()
     if not os.path.lexists(STATE):
-        return 0
+        return 0 if keys_ok else 1
     req, errors = _read(STATE)
     if errors:
         print(f"vb-ssh: {STATE} is not valid ({'; '.join(errors)}); SSH stays off", file=sys.stderr)
@@ -215,8 +360,8 @@ def boot() -> int:
         print(f"vb-ssh: failed at boot: {e}", file=sys.stderr)
         return 1
     print(f"vb-ssh: SSH {req['action']} at boot")
-    return 0
+    return 0 if keys_ok else 1
 
 
 if __name__ == "__main__":
-    sys.exit({"apply": apply, "boot": boot}[sys.argv[1]]())
+    sys.exit({"apply": apply, "boot": boot, "keys": save_keys}[sys.argv[1]]())

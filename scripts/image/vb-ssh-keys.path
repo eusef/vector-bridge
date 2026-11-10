@@ -1,0 +1,11 @@
+[Unit]
+Description=VectorBridge: the login's SSH keys changed, save them for the next boot
+After=persist.mount
+
+[Path]
+# install.sh puts the home of uid 1000 in place of @HOME@. Field mode's overlay forgets this file
+# at every reboot (roadmap 4.11); vb-ssh-keys copies it to /persist and vb-ssh-boot puts it back.
+PathChanged=@HOME@/.ssh/authorized_keys
+
+[Install]
+WantedBy=multi-user.target

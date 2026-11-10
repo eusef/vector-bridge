@@ -166,6 +166,18 @@ def test_report_reads_the_device(monkeypatch, tmp_path):
     rep = wifijoin.report()
     assert (rep["on_ap"], rep["connection"], rep["ip"], rep["result"]) == (False, "Home", "192.0.2.7", None)
     assert rep["radio"] == "Built-in, 2.4 GHz" and rep["radio_usb"] is False   # the home page's adapter notice keys on this
+    assert rep["radio_5ghz"] is False
+
+
+def test_report_says_a_built_in_radio_has_5_ghz(monkeypatch, tmp_path):
+    # Pi 3B+ / 4: the built-in radio runs the access point on 5 GHz, so the adapter notice is not needed.
+    monkeypatch.setattr(wifijoin, "RESULT", tmp_path / "r.json")
+    monkeypatch.setattr(wifijoin, "saved_networks", list)
+    monkeypatch.setattr(wifijoin, "PENDING", tmp_path / "p.json")
+    monkeypatch.setattr(wifiradio, "built_in", lambda: wifiradio.Radio("wlan0", usb=False, channels=(149, 36)))
+    monkeypatch.setattr(wifijoin.manage, "_nmcli", lambda *a, **k: R(out="GENERAL.CONNECTION:vector-bridge-ap\nGENERAL.STATE:100 (connected)\n"))
+    rep = wifijoin.report()
+    assert rep["radio_usb"] is False and rep["radio_5ghz"] is True
 
 
 @pytest.fixture
@@ -230,6 +242,7 @@ def at_boot(tmp_path, monkeypatch):
     (tmp_path / "home.json").write_text(json.dumps({"ssid": "HomeNet"}))
     monkeypatch.setattr(wifijoin, "HOME", tmp_path / "home.json")
     monkeypatch.setattr(wifijoin, "RESULT", tmp_path / "result.json")
+    monkeypatch.setattr(wifijoin, "AP_CHOSEN", tmp_path / "ap-chosen")
     monkeypatch.setattr(wifijoin, "saved_networks", lambda: ["HomeNet"])
     monkeypatch.setattr(wifijoin.persist, "save", lambda p, d, **k: p.write_text(d))
     monkeypatch.setattr(wifijoin.time, "sleep", lambda s: None)
@@ -397,3 +410,130 @@ def test_an_adapter_that_refuses_the_access_point_leaves_it_to_the_built_in_radi
     monkeypatch.setattr(wifiradio, "bring_up", bring_up)
     request({"action": "ap"})
     assert wifijoin.apply() == 0 and tried == ["wlan1", "wlan0"]
+
+
+# ---- the log says why boot() stayed on the access point, and the watch after it --------------
+
+
+def test_boot_logs_every_way_it_stays_on_the_access_point(at_boot, capsys, monkeypatch):
+    wifijoin.HOME.write_text(json.dumps({"ssid": ""}))
+    wifijoin.boot()
+    monkeypatch.setattr(wifijoin, "saved_networks", list)
+    wifijoin.HOME.write_text(json.dumps({"ssid": "HomeNet"}))
+    wifijoin.boot()
+    monkeypatch.setattr(wifijoin, "saved_networks", lambda: ["HomeNet"])
+    at_boot["scan"] = [["Neighbour"]]
+    wifijoin.boot()
+    at_boot["scan"], at_boot["up_rc"] = [["HomeNet"]], 4
+    wifijoin.boot()
+    at_boot["up_rc"] = 0
+    wifijoin.boot()
+    out = capsys.readouterr().out.splitlines()
+    assert out == ["vb-wifi-home: no home network is marked, staying on the access point",
+                   "vb-wifi-home: home network HomeNet is not a remembered network, staying on the access point",
+                   "vb-wifi-home: HomeNet not in range, staying on the access point",
+                   "vb-wifi-home: could not rejoin HomeNet: Error: Connection activation failed, back to the access point",
+                   "vb-wifi-home: rejoined HomeNet"]
+
+
+@pytest.fixture
+def watching(at_boot, monkeypatch, tmp_path):
+    """A Rejoin that was on the home network since boot; `con` is what the radio carries now."""
+    state = {"con": "HomeNet", "now": 1000.0}
+    monkeypatch.setattr(wifijoin, "AP_CHOSEN", tmp_path / "ap-chosen")
+    monkeypatch.setattr(wifijoin, "_device", lambda: {"GENERAL.CONNECTION": state["con"]})
+    rj = wifijoin.Rejoin(was_home=True, clock=lambda: state["now"])
+    state["rj"] = rj
+    return state
+
+
+def ups(at_boot):
+    return [c for c in at_boot["calls"] if c.startswith("connection up")]
+
+
+def test_a_dropped_home_network_is_rejoined_once_it_is_back_in_range(watching, at_boot, capsys):
+    rj = watching["rj"]
+    rj.tick()                                   # still on it
+    watching["con"] = "vector-bridge-ap"        # NetworkManager fell back to the access point
+    rj.tick()
+    assert ups(at_boot) == []                   # the first look only starts the clock
+    watching["now"] += 19
+    rj.tick()
+    assert ups(at_boot) == []
+    watching["now"] += 1
+    rj.tick()
+    assert ups(at_boot) == ["connection up HomeNet"]
+    assert json.loads(wifijoin.RESULT.read_text())["text"] == "Rejoined HomeNet after it dropped."
+    assert "vb-wifi-home: HomeNet dropped, trying again in 20 s" in capsys.readouterr().out
+
+
+def test_tries_wait_longer_each_time_and_never_pause_the_access_point(watching, at_boot):
+    rj = watching["rj"]
+    at_boot["scan"] = [[]]                      # nothing in range; the scan finds nothing at all
+    at_boot["rescan_rc"] = 1                    # as on an adapter that cannot scan as the access point
+    watching["con"] = "vector-bridge-ap"
+    rj.tick()
+    for wait in (20, 40, 80, 160, 300, 300):
+        watching["now"] += wait - 1
+        rj.tick()
+        n = sum("wifi list" in c for c in at_boot["calls"])
+        watching["now"] += 1
+        rj.tick()
+        assert sum("wifi list" in c for c in at_boot["calls"]) == n + 1
+    assert ups(at_boot) == []
+    assert not any("device disconnect" in c for c in at_boot["calls"])
+    assert not any("--rescan yes" in c for c in at_boot["calls"])
+
+
+def test_no_rejoin_after_back_to_the_access_point_or_when_home_was_never_up(watching, at_boot):
+    rj = watching["rj"]
+    watching["con"] = "vector-bridge-ap"
+    wifijoin.AP_CHOSEN.touch()                  # the user tapped "Back to the access point"
+    for _ in range(3):
+        watching["now"] += 300
+        rj.tick()
+    assert ups(at_boot) == []
+    wifijoin.AP_CHOSEN.unlink()
+    never = wifijoin.Rejoin(was_home=False, clock=lambda: watching["now"])
+    for _ in range(3):
+        watching["now"] += 300
+        never.tick()
+    assert ups(at_boot) == [] and not any("wifi list" in c for c in at_boot["calls"])
+
+
+def test_back_to_the_access_point_sets_the_flag_and_a_join_clears_it(root_side, tmp_path, monkeypatch):
+    monkeypatch.setattr(wifijoin, "AP_CHOSEN", tmp_path / "ap-chosen")
+    request({"action": "ap"})
+    wifijoin.apply()
+    assert wifijoin.AP_CHOSEN.exists()
+    request({"action": "up", "ssid": "Known"})
+    wifijoin.apply()
+    assert not wifijoin.AP_CHOSEN.exists()
+
+
+def test_a_failed_retry_brings_the_access_point_back(watching, at_boot, capsys):
+    rj = watching["rj"]
+    at_boot["up_rc"] = 4                        # in range, but the join fails (passphrase changed)
+    watching["con"] = "vector-bridge-ap"
+    rj.tick()
+    watching["now"] += 20
+    rj.tick()
+    assert ups(at_boot) == ["connection up HomeNet", "connection up vector-bridge-ap"]
+    assert "could not rejoin HomeNet: Error: Connection activation failed, back to the access point" in capsys.readouterr().out
+
+
+def test_a_retry_that_finds_no_networks_on_the_access_point_says_so(watching, at_boot, capsys):
+    rj = watching["rj"]
+    at_boot["scan"] = [["VectorBridge-B08a"]]   # only its own network: this radio cannot scan as the access point
+    watching["con"] = "vector-bridge-ap"
+    rj.tick()
+    watching["now"] += 20
+    rj.tick()
+    assert "HomeNet not seen: this radio found no networks while it is the access point" in capsys.readouterr().out
+
+
+def test_a_restarted_service_keeps_the_access_point_that_was_chosen(at_boot, capsys):
+    wifijoin.AP_CHOSEN.touch()
+    assert wifijoin.boot() == 0
+    assert not any("wifi" in c or c.startswith("connection up") for c in at_boot["calls"])
+    assert "the access point was chosen, staying on it" in capsys.readouterr().out

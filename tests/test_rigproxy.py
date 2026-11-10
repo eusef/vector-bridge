@@ -1,6 +1,7 @@
 """The rigctl safety proxy (M4): desktop keys go through the Ladder, one keyer at a time,
 unkeyed on disconnect and after the cap; everything else passes through to rigctld."""
 
+import logging
 import socket
 import threading
 import time
@@ -24,7 +25,7 @@ class FakeRigctld:
     """Line-at-a-time rigctld on a real socket: answers f, acknowledges anything else."""
 
     def __init__(self):
-        self.lines = []
+        self.lines, self.clients = [], []
         self.srv = socket.socket()
         self.srv.bind(("127.0.0.1", 0))
         self.srv.listen(8)
@@ -40,12 +41,22 @@ class FakeRigctld:
             threading.Thread(target=self._serve, args=(c,), daemon=True).start()
 
     def _serve(self, c):
+        self.clients.append(c)
         f = c.makefile("rb")
         for raw in f:
             line = raw.decode().strip()
             self.lines.append(line)
             c.sendall(b"14074000\n" if line in ("f", "+\\get_freq") else b"RPRT 0\n")
         c.close()
+
+    def drop_clients(self):
+        """rigctld going away under a session."""
+        for c in self.clients:
+            try:
+                c.shutdown(socket.SHUT_RDWR)
+            except OSError:
+                pass
+            c.close()
 
     def close(self):
         self.srv.close()
@@ -174,6 +185,56 @@ def test_disconnect_while_keyed_unkeys(bench):
     c.close()
     assert wait_for(lambda: not ptt.keyed)
     assert rig.log == [True, False] and ptt.lock.owner is None
+
+
+def test_the_log_says_which_end_ended_a_session(bench, caplog):
+    proxy = bench.proxy
+    caplog.set_level(logging.WARNING, logger=P.__name__)
+    c = connect(proxy)
+    ask(c, b"f\n")
+    c.close()
+    assert wait_for(lambda: "the client closed its connection" in caplog.text)
+    assert "closed, the client closed its connection" in caplog.text and "keyed" not in caplog.text
+    caplog.clear()
+    c = connect(proxy)
+    ask(c, b"T 1\n")
+    bench.up.drop_clients()
+    assert wait_for(lambda: "rigctld closed its connection" in caplog.text)
+    assert "(it was keyed)" in caplog.text
+
+
+class _Sock:
+    """One recv's worth of data, then end of stream; sendall raises send_err when given."""
+
+    def __init__(self, data=b"", send_err=None):
+        self.data, self.send_err = data, send_err
+
+    def recv(self, n):
+        data, self.data = self.data, b""
+        return data
+
+    def sendall(self, data):
+        if self.send_err:
+            raise self.send_err
+
+
+def _session(client, upstream):
+    s = P.Session.__new__(P.Session)
+    s.client, s.upstream, s.authed, s.owner = client, upstream, True, "rigctl test"
+    s._write, s._pump_up = threading.Lock(), lambda: None
+    s.whys = []
+    s.close = lambda why=None: s.whys.append(why)
+    return s
+
+
+def test_a_failed_write_names_the_end_that_failed():
+    s = _session(_Sock(), _Sock(b"14074000\n"))
+    s.client.send_err = ConnectionResetError("reset by peer")
+    P.Session._pump_up(s)                       # rigctld's reply could not reach the client
+    assert s.whys == ["client socket error: reset by peer"]
+    s = _session(_Sock(b"f\n"), _Sock(send_err=BrokenPipeError("broken pipe")))
+    s.serve()                                   # the client's command could not reach rigctld
+    assert s.whys == ["rigctld socket error: broken pipe"]
 
 
 def test_a_clients_t0_lets_the_audio_play_out_but_cap_and_disconnect_drop_ptt_at_once(bench):

@@ -28,8 +28,11 @@ console opens a menu: "Reset the admin PIN", "Show the bridge Wi-Fi name and pas
 
 ## USB Wi-Fi adapter
 
-The Pi's built-in radio is 2.4 GHz only and drops audio packets under load. On the bench on
-2026-10-06 and 07, 0.25 to 1.56 % of the bridge's audio sends failed through it. Through a USB
+The built-in radio of the Pi Zero 2 W and the Pi 3 Model B is 2.4 GHz only and drops audio packets
+under load. On the bench on 2026-10-06 and 07, 0.25 to 1.56 % of the bridge's audio sends failed
+through a Zero 2 W's radio. The Pi 3 B+, Pi 4 and Pi 5 radios also do 5 GHz, and with a Wi-Fi country
+set the bridge runs its access point there (channels as below): a Pi 3 B+ lost no packets on it in a
+14-minute test on 2026-11-07, so those boards need no adapter. Through a USB
 5 GHz adapter, 0 to 0.03 % failed. Plug an adapter into any USB port and the bridge moves to it
 within a few seconds:
 
@@ -44,8 +47,8 @@ within a few seconds:
   address; `vectorbridge.local` follows it.
 - The built-in radio sits idle meanwhile. Unplug the adapter and everything moves back to it.
 
-While the built-in radio carries the network, the home page opens with a notice recommending an
-adapter. "Got It" hides it for good in that browser. It never shows while an adapter is in use.
+While a built-in radio with no 5 GHz channel carries the network (a Zero 2 W or Pi 3 B, or any board
+before a Wi-Fi country is set), the home page opens with a notice recommending an adapter. "Got It" hides it for good in that browser. It never shows while an adapter is in use.
 The Wi-Fi page's Radio row says which radio and band are on the air.
 
 Any adapter with a Linux driver in the Raspberry Pi OS kernel that can run an access point
@@ -112,6 +115,15 @@ pages and read the status, but every change needs the admin PIN (`DOCS/web-api.m
   cannot tell that from a place with no Wi-Fi at all. So when a scan shows no networks, the
   access point pauses for one scan, a few seconds, and comes back if the network is not in range.
   A failed rejoin (router down, passphrase changed) brings the access point back.
+  The same service keeps watching: when the home network drops later (a router that re-authenticates
+  and times out once makes NetworkManager give the profile up, and the profile never autoconnects),
+  the bridge joins it again as soon as it is in range, waiting 20 s, 40 s, and so on up to 5 min
+  between tries. It only does this for a network that was up since boot, and never pauses the
+  access point for it; "Back to the access point" turns it off until the next boot or join.
+  A radio that cannot scan while it is the access point (TP-Link T2U Nano: SCAN-FAILED -95) never
+  sees the network on these tries, so it stays on the access point until the next boot; the log
+  says "this radio found no networks while it is the access point". A failed try brings the access
+  point back.
 - A wrong passphrase puts the access point back; the page says why.
 
 On the bench, `vector-bridge wifi join <ssid>` does the same from a shell (this one is not

@@ -1,0 +1,7 @@
+[Unit]
+Description=VectorBridge: save the login's SSH keys to /persist for the next boot
+After=persist.mount vb-ssh-boot.service
+
+[Service]
+Type=oneshot
+ExecStart=/opt/vector-bridge/venv/bin/python -m vector_bridge.sshswitch keys

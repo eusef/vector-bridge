@@ -4,7 +4,38 @@ What changed in each VectorBridge image, for the people who run one. The format 
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Numbers in parentheses are pull requests; short hashes are
 commits that reached `main` without one.
 
-## [Unreleased]
+## [0.2.3] - 2026-11-09
+
+Published as a pre-release, like 0.2.2.
+
+### Added
+
+- One image for the Raspberry Pi Zero 2 W, Pi 3, Pi 4 and Pi 5. Raspberry Pi Imager lists all four boards on its
+  Device page (before, the page listed none, or only the Zero 2 W). Tested on a Zero 2 W, a Pi 3 Model B+ and a
+  Pi 4 Model B; the Pi 5 is not tested yet, and reports are welcome.
+- The bridge's log records every Wi-Fi switch request from the web page, refused ones too (no PIN, wrong PIN,
+  bad request), without the network name or passphrase. A press that did nothing now leaves a trace.
+- The log says which end closed a port 4532 rig-control session and whether the radio was keyed at the time.
+
+### Changed
+
+- The home page shows the "Better Wi-Fi with a USB adapter" notice only when the built-in Wi-Fi has no 5 GHz
+  channel (Pi Zero 2 W, Pi 3 Model B, or any board before a Wi-Fi country is set).
+
+### Fixed
+
+- A marked home Wi-Fi network that drops after boot is rejoined once it is back in range (tries 20 s apart, doubling
+  to 5 min). Before, one router re-authentication that timed out left the bridge on its own access point until a
+  restart or a tap on the Wi-Fi page. "Back to the access point" turns the rejoining off until the next restart or the next join.
+- `vb-wifi-home` logs why it left the bridge on the access point at boot (no network marked, not remembered, out of
+  range, join failed) instead of exiting without a word.
+- The image no longer ships the bench card's own kits and saved radio profiles (0.2.1 and 0.2.2 listed the
+  maintainer's kits in the setup wizard), and its Transmit Time Limit is back to the 120 s default (0.2.2
+  shipped 30 s).
+- An SSH key added to the login's `~/.ssh/authorized_keys` survives a reboot: the bridge saves the file to
+  `/persist` whenever it changes and puts it back at boot. Before, the read-only root forgot it at every restart.
+- The admin PIN prompt keeps the keyboard: on an iPhone the page under it could take focus while you typed.
+  Escape closes only the prompt, not the sheet under it.
 
 ## [0.2.2] - 2026-10-29
 

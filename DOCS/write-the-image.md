@@ -1,8 +1,8 @@
 # Write the image with Raspberry Pi Imager
 
 The steps, with pictures, on a Mac with Raspberry Pi Imager 2.0.12. The short version is in the README's
-"End user" section. You need a Raspberry Pi Zero 2 W, a microSD card of 16 GB or more, a card reader and
-a phone.
+"End user" section. You need a Raspberry Pi (Zero 2 W, 3, 4 or 5), a microSD card of 16 GB or more, a card reader
+and a phone. `VERSION` below is the release's version number, for example `0.2.3`.
 
 ## 1. Add the VectorBridge repository
 
@@ -12,26 +12,26 @@ not download the image by hand. Either:
 - start Imager from a terminal with the URL:
 
   ```
-  "/Applications/Raspberry Pi Imager.app/Contents/MacOS/rpi-imager" --repo https://github.com/eusef/vector-bridge/releases/download/v0.2.0/os_list.json
+  "/Applications/Raspberry Pi Imager.app/Contents/MacOS/rpi-imager" --repo https://github.com/eusef/vector-bridge/releases/download/vVERSION/os_list.json
   ```
 
-- or download `vector-bridge-0.2.0.img.xz` from the release page and choose **Use custom** at step 3.
+- or download `vector-bridge-VERSION.img.xz` from the release page and choose **Use custom** at step 3.
 
 The window title then says "Using data from release-assets.githubusercontent.com": that is GitHub's
 file host and is expected.
 
 ## 2. Device
 
-With the VectorBridge repository the device list is empty, because the list carries one image and no
-device catalogue. Press **Next**; the summary later says "No device selected", which is fine. (With
-Imager's own list you would pick Raspberry Pi Zero 2 W; the image is built and tested on that board
-only.)
+Pick your board (**Raspberry Pi Zero 2 W**, **Raspberry Pi 3**, **Raspberry Pi 4** or **Raspberry Pi
+5**) and press **Next**. The image is tested on the Zero 2 W, a Pi 3 Model B+ and a Pi 4 Model B; the
+Pi 5 is not tested yet. (An older list with no device catalogue opens this page empty: press
+**Next** and ignore "No device selected" on the summary.)
 
 ![Device step](images/imager/01-device.png)
 
 ## 3. OS
 
-Pick **VectorBridge 0.2.0**. The entry shows the download size and release date; Imager checks the
+Pick **VectorBridge VERSION**. The entry shows the download size and release date; Imager checks the
 download against the published checksum before writing.
 
 ![OS step with VectorBridge listed](images/imager/02-os-list.png)
