@@ -168,9 +168,11 @@ password. Until then the console's command line has no password for `sudo`.
          vector-bridge-VERSION.img.xz vector-bridge-VERSION.img.xz.sha256 \
          vector-bridge-VERSION-packages.txt ../imager/os_list.json ../imager/vector-bridge-icon.png
 
-   Check it from the Mac (ROADMAP 4.3): `"/Applications/Raspberry Pi Imager.app/Contents/MacOS/rpi-imager"
-   --repo https://github.com/eusef/vector-bridge/releases/download/vVERSION/os_list.json` lists
-   VectorBridge with the image size; write a card from it and run "Acceptance" below.
+   Check it from the Mac (ROADMAP 4.3): `open "rpi-imager://open?repo=https://raw.githubusercontent.com/eusef/vector-bridge/main/imager/os_list.json"`
+   (the link the README gives users; it follows public `main`) lists VectorBridge VERSION with the image
+   size; write a card from it and run "Acceptance" below. Public `main` carries the new `os_list.json`
+   a few minutes before the release assets exist, so that link points at a missing image until
+   `gh release create` finishes; this gap is accepted (2026-11-11).
 
 ### Rebuilding from an existing golden card
 

@@ -4,7 +4,7 @@ A Raspberry Pi (Zero 2 W, 3, 4 or 5) that presents an HF radio to a tablet or co
 
 On top of the audio transport the bridge is a field appliance: it boots as its own Wi-Fi network with a captive portal, keeps its card read-only so a power pull is safe, walks a rig to ready with a setup wizard, keeps transmit locked until a safety ladder has passed, and alerts a phone and the status LED when something that was working stops.
 
-Status: 0.2.2 is published as a pre-release (2026-10-29); it replaces 0.2.1. Image vector-bridge-0.2.2 is the latest captured image; interim-fb72fbf (2026-10-23) was the last one through acceptance. The iPad client is VectorComm, in its own repo.
+Status: 0.2.3 is published as a pre-release (2026-11-10). Image vector-bridge-0.2.3 is the latest captured image and passed acceptance on a Pi 4 B (2026-11-10). The iPad client is VectorComm, in its own repo.
 
 ## Documents
 
@@ -89,6 +89,15 @@ You need a Raspberry Pi (Zero 2 W, 3, 4 or 5; the Pi 5 is not tested yet), a mic
 7. Join the new network with the new passphrase and open `http://vectorbridge/`. The first change you save asks you to create an admin PIN. Then set up your radio (`DOCS/setup-wizard.md`).
 
 `vector-bridge-wifi.txt` on the card's boot partition always holds the current network name and passphrase; any computer can read it. A forgotten PIN or passphrase can also be reset from an HDMI monitor and USB keyboard (`DOCS/field-network.md`, "Admin PIN and the console").
+
+## End user: upgrade to a new release
+
+There is no in-place update yet. To upgrade, write the new release to a card the same way as the first time (steps 1 to 5 above). Writing a card erases everything on it, so the bridge starts again as if it were new: its network name and passphrase, Wi-Fi country, saved home networks, admin PIN, radio setup, kits and levels (receive and transmit gain, transmit time limit), SSH setting and keys are all gone. Nothing carries over from the old card, and there is no settings export yet. Only the display theme you picked is kept, because it is stored on your phone.
+
+1. Before you upgrade, write down what you will set again: for each kit in `http://vectorbridge/`, the radio settings and the levels; your Wi-Fi country; the name and password of each home network the bridge joins; and any alert settings you changed. Your bridge's own network name and passphrase are in `vector-bridge-wifi.txt` on the old card's boot partition.
+2. If you have a spare microSD card, write the new release to it and keep the old card as it is. If the new one gives you trouble, put the old card back in.
+3. Boot the new card and follow steps 6 and 7 above. Give the bridge the same network name and passphrase as before, so your phone and tablet join it as they did before.
+4. Create the admin PIN again and set up your radio and kits again. Apps that log in to the bridge, such as VectorComm and VectorCable, need logging in again with the new PIN.
 
 ## Mac: develop and test without hardware
 

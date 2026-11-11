@@ -17,7 +17,10 @@ rpi-imager://open?repo=https://raw.githubusercontent.com/eusef/vector-bridge/mai
 ```
 
 The browser asks whether to open Raspberry Pi Imager: allow it. Imager then asks "Switch to a custom
-repository?": press **Switch repository**.
+repository?": press **Switch repository**. (**Cancel** is the highlighted button, so do not just press
+Enter.)
+
+![Switch repository dialog](images/imager/00-switch-repository.png)
 
 Or paste one command into a terminal instead:
 
@@ -38,6 +41,10 @@ Or paste one command into a terminal instead:
   ```
   xdg-open "rpi-imager://open?repo=https://raw.githubusercontent.com/eusef/vector-bridge/main/imager/os_list.json"
   ```
+
+The browser link and the Mac command are tested in Safari, Chrome and Terminal. The Windows and Linux
+commands are not tested yet: if one does not work for you, please open an issue on GitHub saying what
+happened.
 
 The window title then says "Using data from raw.githubusercontent.com": that is GitHub's file host and
 is expected. If nothing opens, Imager is not installed or is older than 2.0.3 (or, on Linux, was
