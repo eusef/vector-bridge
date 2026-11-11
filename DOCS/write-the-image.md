@@ -4,21 +4,45 @@ The steps, with pictures, on a Mac with Raspberry Pi Imager 2.0.12. The short ve
 "End user" section. You need a Raspberry Pi (Zero 2 W, 3, 4 or 5), a microSD card of 16 GB or more, a card reader
 and a phone. `VERSION` below is the release's version number, for example `0.2.3`.
 
-## 1. Add the VectorBridge repository
+## 1. Open Imager with the VectorBridge list
 
-Imager reads its OS list from a repository URL. VectorBridge publishes one with each release, so you do
-not download the image by hand. Either:
+Install [Raspberry Pi Imager](https://www.raspberrypi.com/software/) 2.0.3 or newer. Imager reads its
+OS list from a web address, and VectorBridge publishes one that always points at the newest release, so
+you do not download the image by hand.
 
-- start Imager from a terminal with the URL:
+Copy this link, paste it into your web browser's address bar and press Enter:
+
+```
+rpi-imager://open?repo=https://raw.githubusercontent.com/eusef/vector-bridge/main/imager/os_list.json
+```
+
+The browser asks whether to open Raspberry Pi Imager: allow it. Imager then asks "Switch to a custom
+repository?": press **Switch repository**.
+
+Or paste one command into a terminal instead:
+
+- Mac (Terminal):
 
   ```
-  "/Applications/Raspberry Pi Imager.app/Contents/MacOS/rpi-imager" --repo https://github.com/eusef/vector-bridge/releases/download/vVERSION/os_list.json
+  open "rpi-imager://open?repo=https://raw.githubusercontent.com/eusef/vector-bridge/main/imager/os_list.json"
   ```
 
-- or download `vector-bridge-VERSION.img.xz` from the release page and choose **Use custom** at step 3.
+- Windows (PowerShell):
 
-The window title then says "Using data from release-assets.githubusercontent.com": that is GitHub's
-file host and is expected.
+  ```
+  Start-Process "rpi-imager://open?repo=https://raw.githubusercontent.com/eusef/vector-bridge/main/imager/os_list.json"
+  ```
+
+- Linux:
+
+  ```
+  xdg-open "rpi-imager://open?repo=https://raw.githubusercontent.com/eusef/vector-bridge/main/imager/os_list.json"
+  ```
+
+The window title then says "Using data from raw.githubusercontent.com": that is GitHub's file host and
+is expected. If nothing opens, Imager is not installed or is older than 2.0.3 (or, on Linux, was
+never started once so it could register the link): install or update it, or download
+`vector-bridge-VERSION.img.xz` from the release page and choose **Use custom** at step 3.
 
 ## 2. Device
 

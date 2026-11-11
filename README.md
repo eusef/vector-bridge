@@ -57,12 +57,36 @@ Every `DOCS/*.md` is also served on the card at `http://vectorbridge/docs/`.
 
 You need a Raspberry Pi (Zero 2 W, 3, 4 or 5; the Pi 5 is not tested yet), a microSD card of 16 GB or more (the image unpacks to about 9.4 GB), and a phone. A USB Wi-Fi adapter is recommended (`DOCS/field-network.md`, "USB Wi-Fi adapter"). Read `DOCS/known-issues.md` before you take the bridge to the field.
 
-1. Download `vector-bridge-VERSION.img.xz` and `vector-bridge-VERSION.img.xz.sha256` from the release. To check the download, run `shasum -a 256 -c vector-bridge-VERSION.img.xz.sha256` in the same folder (`sha256sum -c` on Linux); it prints `OK`.
-2. Open [Raspberry Pi Imager](https://www.raspberrypi.com/software/). Device: your board (**Raspberry Pi Zero 2 W**, **3**, **4** or **5**). OS: **Use Custom**, then pick the `.img.xz`. Storage: your card. (Or skip the download: start Imager with `--repo https://github.com/eusef/vector-bridge/releases/download/vVERSION/os_list.json`, and VectorBridge appears in its OS list with the checksum verified for you. `DOCS/write-the-image.md` shows each step.)
-3. If Imager offers customisation, choose **Skip customisation**. The bridge does not use Imager's hostname, user, Wi-Fi or SSH settings; it asks for what it needs on its own first-boot page.
-4. Write the card, put it in the Pi and power it up. On its first boot the bridge makes an open Wi-Fi network named `VectorBridge-XXXX`.
-5. Join that network from your phone. The sign-in page opens by itself (if it does not, browse to `http://vectorbridge/wifi`). Choose a new network name, a passphrase and your Wi-Fi country, then save. The new name must differ from the open one, so phones do not try the old, open entry. The bridge reboots once.
-6. Join the new network with the new passphrase and open `http://vectorbridge/`. The first change you save asks you to create an admin PIN. Then set up your radio (`DOCS/setup-wizard.md`).
+1. Install [Raspberry Pi Imager](https://www.raspberrypi.com/software/) 2.0.3 or newer.
+2. Open Imager with the VectorBridge list. Copy this link, paste it into your web browser's address bar and press Enter. Allow the browser to open Raspberry Pi Imager, then press **Switch repository** in Imager:
+
+   ```
+   rpi-imager://open?repo=https://raw.githubusercontent.com/eusef/vector-bridge/main/imager/os_list.json
+   ```
+
+   Or paste one command into a terminal:
+
+   Mac (Terminal):
+   ```
+   open "rpi-imager://open?repo=https://raw.githubusercontent.com/eusef/vector-bridge/main/imager/os_list.json"
+   ```
+   Windows (PowerShell):
+   ```
+   Start-Process "rpi-imager://open?repo=https://raw.githubusercontent.com/eusef/vector-bridge/main/imager/os_list.json"
+   ```
+   Linux:
+   ```
+   xdg-open "rpi-imager://open?repo=https://raw.githubusercontent.com/eusef/vector-bridge/main/imager/os_list.json"
+   ```
+
+   The link always loads the newest release, and Imager checks the download for you. `DOCS/write-the-image.md` walks through each step, with pictures.
+3. In Imager: Device: your board (**Raspberry Pi Zero 2 W**, **3**, **4** or **5**). OS: **VectorBridge VERSION**. Storage: your card.
+
+   Without the link (or with an Imager older than 2.0.3): download `vector-bridge-VERSION.img.xz` and `vector-bridge-VERSION.img.xz.sha256` from the release, check the download with `shasum -a 256 -c vector-bridge-VERSION.img.xz.sha256` in the same folder (`sha256sum -c` on Linux; it prints `OK`), and choose **Use Custom** as the OS, then pick the `.img.xz`.
+4. If Imager offers customisation, choose **Skip customisation**. The bridge does not use Imager's hostname, user, Wi-Fi or SSH settings; it asks for what it needs on its own first-boot page.
+5. Write the card, put it in the Pi and power it up. On its first boot the bridge makes an open Wi-Fi network named `VectorBridge-XXXX`.
+6. Join that network from your phone. The sign-in page opens by itself (if it does not, browse to `http://vectorbridge/wifi`). Choose a new network name, a passphrase and your Wi-Fi country, then save. The new name must differ from the open one, so phones do not try the old, open entry. The bridge reboots once.
+7. Join the new network with the new passphrase and open `http://vectorbridge/`. The first change you save asks you to create an admin PIN. Then set up your radio (`DOCS/setup-wizard.md`).
 
 `vector-bridge-wifi.txt` on the card's boot partition always holds the current network name and passphrase; any computer can read it. A forgotten PIN or passphrase can also be reset from an HDMI monitor and USB keyboard (`DOCS/field-network.md`, "Admin PIN and the console").
 
